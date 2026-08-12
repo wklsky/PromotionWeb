@@ -17,5 +17,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class TaijiServerApplication {
     public static void main(String[] args) {
         SpringApplication.run(TaijiServerApplication.class, args);
+        System.out.println("Tai Chi Hall Server started.");
     }
 }

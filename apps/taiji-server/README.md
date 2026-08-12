@@ -57,7 +57,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local
 
 ## 本地开发（接真实依赖）
 
-1. 准备 MySQL 库（建表见仓库根 `db/init.sql`），Redis，MinIO。
+1. 准备 MySQL 库（建表见仓库根 `db/init.sql`，初始化数据见 `db/seed.sql`），Redis，MinIO。
 2. 通过环境变量注入凭据（避免明文写入配置）：
 
 ```bash

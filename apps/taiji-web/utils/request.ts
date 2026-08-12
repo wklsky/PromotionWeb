@@ -33,16 +33,18 @@ instance.interceptors.response.use(
   },
 );
 
-// http 封装：方法泛型 T 即 ApiResponse.data 的类型，返回 Promise<ApiResponse<T>>
+// http 封装：响应拦截器已将 AxiosResponse 解包为完整 ApiResponse，故此处直接取回 Axios 结果（即 ApiResponse 对象），
+// 不再二次读取 .data，否则会出现“双重解包”——调用方拿到的是 ApiResponse.data 而非 ApiResponse，
+// 进而在 res.code / res.data 上读到 undefined 甚至 null 抛错。泛型 T 标注 ApiResponse.data 的实体类型。
 export const http = {
   get: <T>(url: string, config?: Record<string, unknown>) =>
-    instance.get<ApiResponse<T>>(url, config).then((r) => r.data as ApiResponse<T>),
+    instance.get<ApiResponse<T>>(url, config).then((r) => r as unknown as ApiResponse<T>),
   post: <T>(url: string, data?: unknown, config?: Record<string, unknown>) =>
-    instance.post<ApiResponse<T>>(url, data, config).then((r) => r.data as ApiResponse<T>),
+    instance.post<ApiResponse<T>>(url, data, config).then((r) => r as unknown as ApiResponse<T>),
   put: <T>(url: string, data?: unknown, config?: Record<string, unknown>) =>
-    instance.put<ApiResponse<T>>(url, data, config).then((r) => r.data as ApiResponse<T>),
+    instance.put<ApiResponse<T>>(url, data, config).then((r) => r as unknown as ApiResponse<T>),
   delete: <T>(url: string, config?: Record<string, unknown>) =>
-    instance.delete<ApiResponse<T>>(url, config).then((r) => r.data as ApiResponse<T>),
+    instance.delete<ApiResponse<T>>(url, config).then((r) => r as unknown as ApiResponse<T>),
 };
 
 export default instance;

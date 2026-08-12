@@ -1,11 +1,3 @@
-/**
- * @Author: wj 3363891051@qq.com
- * @Date: 2026-08-12 10:00
- * @LastEditors: wj 3363891051@qq.com
- * @LastEditTime: 2026-08-12 10:00
- * @FilePath: apps/taiji-server/src/main/resources/application.yml
- * @Description: 后端环境配置（见 docs/14：MySQL/Redis/MinIO/JWT）
- */
 server:
   port: 8080
 

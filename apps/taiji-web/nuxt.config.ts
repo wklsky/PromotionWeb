@@ -23,9 +23,11 @@ export default defineNuxtConfig({
     },
   },
   // 开发期将 /api 反代到 Spring Boot(:8080)，避免浏览器直连 CORS/404（见 docs/14 部署）
+  // 注意：代理目标必须保留 /api 前缀，否则后端收到的是 /content/panda 而非 /api/content/panda，
+  // 会落入 SecurityConfig 的 anyRequest().authenticated() 返回 403（见 docs/14 §4 放行清单）
   nitro: {
     routeRules: {
-      '/api/**': { proxy: 'http://localhost:8080/**' },
+      '/api/**': { proxy: 'http://localhost:8080/api/**' },
     },
   },
 });

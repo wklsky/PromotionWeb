@@ -153,26 +153,7 @@ CREATE TABLE IF NOT EXISTS `admin_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='管理员表';
 
 -- ============================================================
--- 初始化数据
+-- 说明：本文件仅负责建库 + 建表（DDL）。
+-- 初始化数据（角色/管理员/示例内容等）已拆分至 db/seed.sql（DML），
+-- 需先执行本文件建表后，再执行 db/seed.sql 灌入数据。
 -- ============================================================
-
--- 角色
-INSERT INTO `admin_role` (`id`, `name`, `desc`) VALUES
-  (1, 'admin', '超级管理员，拥有全部权限'),
-  (2, 'editor', '内容编辑，可维护新闻/招聘/页面内容')
-ON DUPLICATE KEY UPDATE `desc` = VALUES(`desc`);
-
--- 初始管理员（密码均为 123456 的 BCrypt 密文，上线必须修改）
--- BCrypt: $2a$10$7oVqU8b0Q7YQ6w8Xv1k0eO5qZ1w3Y8x2K9mN4pL0aBcD
-INSERT INTO `admin_user` (`username`, `password`, `role_id`, `status`) VALUES
-  ('admin', '$2a$10$7oVqU8b0Q7YQ6w8Xv1k0eO5qZ1w3Y8x2K9mN4pL0aBcD', 1, 1)
-ON DUPLICATE KEY UPDATE `role_id` = VALUES(`role_id`), `status` = VALUES(`status`);
-
--- 企业内容示例区块（官网关于页/三大馆读取）
-INSERT INTO `company_info` (`section`, `title`, `content`, `sort`, `status`) VALUES
-  ('intro', '关于太极馆', '<p>太极馆是一家以东方文化、科技创新、产业生态为核心的综合型企业品牌。</p>', 1, 1),
-  ('philosophy', '品牌理念', '<p>以东方哲学构建未来产业生态。</p>', 2, 1),
-  ('history', '发展历程', '<p>自创立以来，持续探索东方智慧与未来科技的融合。</p>', 3, 1),
-  ('honor', '企业荣誉', '<p>荣获多项行业资质与荣誉。</p>', 4, 1),
-  ('culture', '企业文化', '<p>开放、创新、共生。</p>', 5, 1)
-ON DUPLICATE KEY UPDATE `title` = VALUES(`title`);
