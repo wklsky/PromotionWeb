@@ -15,6 +15,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // 业务代码统一使用 ~/ 别名指向 src（与 tsconfig paths 保持一致），否则 Vite 运行时无法解析 ~/api/*
+      '~': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   server: {

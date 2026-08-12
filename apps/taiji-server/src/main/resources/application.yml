@@ -3,14 +3,16 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/taiji?useSSL=false&serverTimezone=Asia/Shanghai
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:root}
+    # DB_HOST 默认 localhost，远程部署时通过环境变量注入真实地址（见 docs/15 §8 TODO）
+    url: jdbc:mysql://${DB_HOST:81.70.93.58}:3306/taiji?useSSL=false&serverTimezone=Asia/Shanghai
+    username: ${DB_USER:taiji}
+    password: ${DB_PASSWORD:Py8pNLaxNSNckNbY}
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
-      host: localhost
-      port: 6379
+      # REDIS_HOST 默认 localhost，远程部署时通过环境变量注入真实地址
+      host: ${REDIS_HOST:81.70.93.58}
+      port: ${REDIS_PORT:6379}
 
 mybatis-plus:
   global-config:

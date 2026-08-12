@@ -1,23 +1,37 @@
-/** * @Author: wj 3363891051@qq.com * @Date: 2026-08-12 10:00 * @LastEditors: wj 3363891051@qq.com *
-@LastEditTime: 2026-08-12 10:00 * @FilePath: apps/taiji-web/layouts/default.vue * @Description:
-默认布局，挂载主题切换并渲染公共头部/页脚 */
+/**
+ * @Author: wj 3363891051@qq.com
+ * @Date: 2026-08-12 14:00
+ * @LastEditors: wj 3363891051@qq.com
+ * @LastEditTime: 2026-08-12 14:00
+ * @FilePath: apps/taiji-web/layouts/default.vue
+ * @Description: 官网默认布局（见 docs/05 §3）：固定毛玻璃导航 + 路由视图 + 页脚。
+ *               进入即按路由切换三大馆主题色（useTheme）。
+ */
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useTheme } from '~/composables/useTheme';
+import AppHeader from '~/components/common/AppHeader.vue';
+import AppFooter from '~/components/common/AppFooter.vue';
 
-// 进入布局即启用按路由的主题切换（黑金/黑白/天蓝白）
+// 客户端挂载后启动路由→主题监听（首屏默认 :root 黑金，避免 SSR 闪白）
 onMounted(() => useTheme());
 </script>
 
 <template>
-  <div
-    class="min-h-screen"
-    :style="{ backgroundColor: 'var(--theme-base)', color: 'var(--theme-text)' }"
-  >
-    <header class="px-6 py-4">太极馆 · 企业官网</header>
-    <main>
-      <slot />
+  <div class="site-shell">
+    <AppHeader />
+    <main class="site-main">
+      <NuxtPage />
     </main>
-    <footer class="px-6 py-4 text-center">© 太极馆</footer>
+    <AppFooter />
   </div>
 </template>
+
+<style scoped>
+.site-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.site-main {
+  flex: 1;
+}
+</style>

@@ -1,6 +1,11 @@
-/** * @Author: wj 3363891051@qq.com * @Date: 2026-08-12 10:00 * @LastEditors: wj 3363891051@qq.com *
-@LastEditTime: 2026-08-12 10:40 * @FilePath: apps/taiji-admin/src/views/NewsManage.vue *
-@Description: 新闻管理页（见 docs/11 §5），列表读取 + 新增/删除（接 docs/13 §2.3 写接口） */
+/**
+ * @Author: wj 3363891051@qq.com
+ * @Date: 2026-08-12 14:00
+ * @LastEditors: wj 3363891051@qq.com
+ * @LastEditTime: 2026-08-12 14:00
+ * @FilePath: apps/taiji-admin/src/views/NewsManage.vue
+ * @Description: 新闻管理页（见 docs/11 §5）：列表读取 + 新增/删除（接 docs/13 §2.3 写接口）。
+ */
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import {
@@ -14,9 +19,10 @@ import {
   ElInput,
   ElSelect,
   ElOption,
+  ElTag,
 } from 'element-plus';
 import { listNews, createNews, deleteNews } from '~/api/news';
-import type { NewsListVO, NewsDTO, NewsCategory, ContentStatus } from 'taiji-shared';
+import type { NewsListVO, NewsDTO } from 'taiji-shared';
 
 const list = ref<NewsListVO[]>([]);
 const loading = ref(false);
@@ -42,13 +48,13 @@ async function load() {
 
 onMounted(() => load());
 
-// 新增/编辑弹窗：POST/PUT /api/news 需认证（见 SecurityConfig）
+// 新增/编辑弹窗：POST /api/news 需认证（见 SecurityConfig）
 const dialogVisible = ref(false);
 const form = ref<NewsDTO>({ title: '', category: '企业动态', content: '', status: 1 });
 const submitting = ref(false);
 
 function openCreate() {
-  // NewsCategory 取值与 shared 枚举一致（中文：企业动态/行业资讯/技术文章，见 docs/13 §9）
+  // NewsDTO 取值与 shared 枚举一致（中文：企业动态/行业资讯/技术文章，见 docs/13 §9）
   form.value = { title: '', category: '企业动态', content: '', status: 1 };
   dialogVisible.value = true;
 }
@@ -85,32 +91,47 @@ async function onDelete(row: NewsListVO) {
   }
 }
 
-// status 数字直出转文案（见 docs/13 §2.2 CONTENT_STATUS）
-const statusText = (s: number) => (s === 1 ? '已发布' : '草稿');
+// status 数字转文案与类型（见 docs/13 §2.2 CONTENT_STATUS）
+const statusMeta = (s: number): { text: string; type: 'success' | 'info' } =>
+  s === 1 ? { text: '已发布', type: 'success' } : { text: '草稿', type: 'info' };
 </script>
 
 <template>
   <div>
-    <ElButton type="primary" class="mb-4" @click="openCreate">新增新闻</ElButton>
-    <p v-if="errorMsg" class="text-red-500 mb-2">{{ errorMsg }}</p>
-    <ElTable v-loading="loading" :data="list" border>
-      <ElTableColumn prop="id" label="ID" width="80" />
-      <ElTableColumn prop="title" label="标题" />
-      <ElTableColumn prop="category" label="分类" />
-      <ElTableColumn label="状态">
-        <template #default="{ row }">{{ statusText((row as NewsListVO).status) }}</template>
-      </ElTableColumn>
-      <ElTableColumn label="操作" width="120">
-        <template #default="{ row }">
-          <ElButton type="danger" link @click="onDelete(row as NewsListVO)">删除</ElButton>
-        </template>
-      </ElTableColumn>
-    </ElTable>
+    <div class="cms-page-head">
+      <div>
+        <h2 class="cms-page-title">新闻管理</h2>
+        <p class="cms-page-sub">企业动态 · 行业资讯 · 技术文章</p>
+      </div>
+      <ElButton type="primary" @click="openCreate">+ 新增新闻</ElButton>
+    </div>
 
-    <ElDialog v-model="dialogVisible" title="新增新闻">
+    <p v-if="errorMsg" class="cms-error-tip">{{ errorMsg }}</p>
+
+    <div class="cms-panel cms-table-wrap">
+      <ElTable v-loading="loading" :data="list" style="width: 100%" empty-text="暂无新闻">
+        <ElTableColumn prop="id" label="ID" width="80" />
+        <ElTableColumn prop="title" label="标题" min-width="200" />
+        <ElTableColumn prop="category" label="分类" width="120" />
+        <ElTableColumn label="状态" width="100">
+          <template #default="{ row }">
+            <ElTag :type="statusMeta((row as NewsListVO).status).type" effect="dark">
+              {{ statusMeta((row as NewsListVO).status).text }}
+            </ElTag>
+          </template>
+        </ElTableColumn>
+        <ElTableColumn label="操作" width="100" align="right">
+          <template #default="{ row }">
+            <ElButton type="danger" link @click="onDelete(row as NewsListVO)">删除</ElButton>
+          </template>
+        </ElTableColumn>
+      </ElTable>
+    </div>
+
+    <ElDialog v-model="dialogVisible" title="新增新闻" width="520px">
       <ElForm :model="form" label-width="80px">
         <ElFormItem label="标题">
-          <ElInput v-model="form.title" />
+          <ElInput v-model="form.title" placeholder="请输入标题" />
         </ElFormItem>
         <ElFormItem label="分类">
           <ElSelect v-model="form.category">
@@ -120,7 +141,7 @@ const statusText = (s: number) => (s === 1 ? '已发布' : '草稿');
           </ElSelect>
         </ElFormItem>
         <ElFormItem label="内容">
-          <ElInput v-model="form.content" type="textarea" :rows="4" />
+          <ElInput v-model="form.content" type="textarea" :rows="4" placeholder="请输入正文" />
         </ElFormItem>
         <ElFormItem label="状态">
           <ElSelect v-model="form.status">
@@ -136,3 +157,10 @@ const statusText = (s: number) => (s === 1 ? '已发布' : '草稿');
     </ElDialog>
   </div>
 </template>
+
+<style scoped>
+.cms-table-wrap {
+  padding: 8px 12px;
+  overflow: hidden;
+}
+</style>

@@ -11,9 +11,33 @@ import { ROUTE_THEME_MAP, THEME_PALETTES, type ThemeKey } from 'taiji-shared';
 /**
  * 在 layouts/default.vue 的 onMounted 中调用，监听路由变化切换主题。
  * 进入 /dragon → 黑金，/panda → 黑白，/kunpeng → 天蓝白（见 docs/05 §2.2）。
+ *
+ * 主题色板以 THEME_PALETTES 为单一来源，由本函数写入 :root 的 CSS 变量；
+ * main.css 仅保留 :root 默认（黑金），不再用 body[data-theme] 重复定义，避免优先级冲突。
+ * 同时按底色深浅切换中性色（浅底馆需翻转卡片/边框/文字对比度，否则白底上卡片不可见）。
  */
 export function useTheme(): void {
   const route = useRoute();
+
+  // 中性色两套：深色底（黑金/黑白）与浅色底（天蓝白），按 palette.base 判断
+  const setNeutrals = (light: boolean): void => {
+    const root = document.documentElement.style;
+    if (light) {
+      root.setProperty('--c-bg-soft', 'rgba(10, 26, 63, 0.04)');
+      root.setProperty('--c-bg-card', 'rgba(255, 255, 255, 0.7)');
+      root.setProperty('--c-border', 'rgba(10, 26, 63, 0.12)');
+      root.setProperty('--c-border-strong', 'rgba(10, 26, 63, 0.2)');
+      root.setProperty('--c-muted', 'rgba(10, 26, 63, 0.6)');
+      root.setProperty('--shadow-card', '0 8px 30px rgba(10, 26, 63, 0.12)');
+    } else {
+      root.setProperty('--c-bg-soft', 'rgba(255, 255, 255, 0.04)');
+      root.setProperty('--c-bg-card', 'rgba(255, 255, 255, 0.06)');
+      root.setProperty('--c-border', 'rgba(255, 255, 255, 0.1)');
+      root.setProperty('--c-border-strong', 'rgba(255, 255, 255, 0.18)');
+      root.setProperty('--c-muted', 'rgba(245, 245, 245, 0.6)');
+      root.setProperty('--shadow-card', '0 8px 30px rgba(0, 0, 0, 0.35)');
+    }
+  };
 
   const apply = (path: string): void => {
     const theme = (Object.entries(ROUTE_THEME_MAP).find(([prefix]) =>
@@ -21,10 +45,13 @@ export function useTheme(): void {
     )?.[1] ?? 'dragon') as ThemeKey;
     document.body.dataset.theme = theme;
     const palette = THEME_PALETTES[theme];
-    document.documentElement.style.setProperty('--theme-base', palette.base);
-    document.documentElement.style.setProperty('--theme-primary', palette.primary);
-    document.documentElement.style.setProperty('--theme-accent', palette.accent);
-    document.documentElement.style.setProperty('--theme-text', palette.text);
+    const root = document.documentElement.style;
+    root.setProperty('--theme-base', palette.base);
+    root.setProperty('--theme-primary', palette.primary);
+    root.setProperty('--theme-accent', palette.accent);
+    root.setProperty('--theme-text', palette.text);
+    // 浅底判定：base 接近白色（kunpeng 为 #F5F5F5）时需翻转中性色对比度
+    setNeutrals(palette.base.toLowerCase() === '#f5f5f5');
   };
 
   watch(

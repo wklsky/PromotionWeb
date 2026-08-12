@@ -53,6 +53,8 @@ export interface NewsListVO {
   title: string;
   category: NewsCategory;
   cover: string | null;
+  /** 摘要/简介，列表卡片展示用（对应 news.summary，可空） */
+  summary: string | null;
   author: string | null;
   /** 发布状态：1=已发布 0=草稿（后端 News.status 直出，与 CONTENT_STATUS 一致） */
   status: number;

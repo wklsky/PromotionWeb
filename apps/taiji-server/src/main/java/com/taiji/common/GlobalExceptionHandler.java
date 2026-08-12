@@ -8,39 +8,44 @@
  */
 package com.taiji.common;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * 全局异常处理：统一错误响应，同时强制打印完整堆栈，便于快速定位未处理异常根因。
+ * 注意：NullPointerException 的 getMessage() 通常为 null，仅通过 message 无法定位问题。
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // 显式声明 SLF4J Logger，替代 @Slf4j 注解生成的 log 字段（避免 Lombok 处理器缺失导致编译失败）。
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBiz(BusinessException e) {
-        return fail(400, e.getMessage());
+        return Result.fail(400, e.getMessage());
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public Result<Void> handleAuth(AuthenticationException e) {
-        return fail(401, "未认证或令牌无效");
+        return Result.fail(401, "未认证或令牌无效");
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public Result<Void> handleDenied(AccessDeniedException e) {
-        return fail(403, "无权限访问");
+        return Result.fail(403, "无权限访问");
     }
 
     @ExceptionHandler(Exception.class)
     public Result<Void> handleOther(Exception e) {
-        return fail(500, "服务器内部错误：" + e.getMessage());
-    }
-
-    private <T> Result<T> fail(int code, String msg) {
-        Result<T> r = new Result<>();
-        r.setCode(code);
-        r.setMessage(msg);
-        r.setData(null);
-        return r;
+        // 必须打印完整堆栈：NPE 等异常 message 为 null，仅通过 message 无法定位根因。
+        // 安全约束：响应体不回传内部异常信息（避免暴露堆栈/SQL/路径等敏感细节），
+        // 仅返回通用文案，具体根因依赖服务端日志定位。
+        log.error("未处理异常：{} - {}", e.getClass().getName(), e.getMessage(), e);
+        return Result.fail(500, "服务器内部错误，请联系管理员");
     }
 }

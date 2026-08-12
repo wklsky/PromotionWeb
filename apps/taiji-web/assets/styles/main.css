@@ -1,43 +1,216 @@
 /**
  * @Author: wj 3363891051@qq.com
- * @Date: 2026-08-12 10:00
+ * @Date: 2026-08-12 14:00
  * @LastEditors: wj 3363891051@qq.com
- * @LastEditTime: 2026-08-12 10:00
+ * @LastEditTime: 2026-08-12 14:00
  * @FilePath: apps/taiji-web/assets/styles/main.css
- * @Description: 官网全局样式与三大馆主题 CSS 变量（与 taiji-shared/theme.ts 的 THEME_PALETTES 保持一致）
+ * @Description: 官网全局设计系统（新东方科技风）：设计令牌、排版、按钮、卡片、容器、动效。
+ *              主题色由 useTheme 按路由写入 body[data-theme] 与 CSS 变量，组件仅引用变量不硬编码。
  */
 
-/* 默认（龙虎馆）主题变量，由 useTheme 按路由覆盖 */
+/* ============ 设计令牌 ============ */
 :root {
+  /* 主题色（默认/首页/龙虎馆黑金主调，见 docs/05 §2.2）。
+   运行时由 useTheme 按路由写入 :root 的 CSS 变量（THEME_PALETTES 为单一来源）；
+   此处 :root 仅作 SSR 首屏默认，不另设 body[data-theme] 以免优先级冲突。 */
   --theme-base: #080808;
   --theme-primary: #d4af37; /* 金 */
-  --theme-accent: #f5f5f5;
+  --theme-accent: #d4af37;
   --theme-text: #f5f5f5;
+
+  /* 中性色（深色底默认；浅底馆由 useTheme 运行时翻转，见 composables/useTheme.ts） */
+  --c-bg-soft: rgba(255, 255, 255, 0.04);
+  --c-bg-card: rgba(255, 255, 255, 0.06);
+  --c-border: rgba(255, 255, 255, 0.1);
+  --c-border-strong: rgba(255, 255, 255, 0.18);
+  --c-muted: rgba(245, 245, 245, 0.6);
+
+  /* 排版 */
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 0 24px color-mix(in srgb, var(--theme-primary) 45%, transparent);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --maxw: 1200px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* 熊猫馆：黑白主调（见 docs/05 §2.2） */
-body[data-theme='panda'] {
-  --theme-base: #080808;
-  --theme-primary: #f5f5f5; /* 白 */
-  --theme-accent: #9ca3af;
-  --theme-text: #f5f5f5;
+/* ============ 基础重置与排版 ============ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-/* 鲲鹏馆：天蓝白主调（见 docs/05 §2.2） */
-body[data-theme='kunpeng'] {
-  --theme-base: #f5f5f5; /* 白底 */
-  --theme-primary: #1677ff; /* 天蓝 */
-  --theme-accent: #0a1a3f; /* 深蓝字 */
-  --theme-text: #0a1a3f;
+html {
+  scroll-behavior: smooth;
 }
 
-/* 瀑布流容器令牌（见 docs/05 §6.1、docs/09 §7） */
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--theme-base);
+  color: var(--theme-text);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  transition: background 600ms var(--ease), color 600ms var(--ease);
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* ============ 布局工具 ============ */
+.container {
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 32px);
+}
+
+.section {
+  padding-block: clamp(48px, 8vw, 96px);
+}
+
+/* 渐变氛围背景：随主题主色变化的水墨晕染 */
+.aura-bg {
+  position: relative;
+}
+.aura-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 20% 0%, color-mix(in srgb, var(--theme-primary) 16%, transparent), transparent 70%),
+    radial-gradient(50% 50% at 90% 20%, color-mix(in srgb, var(--theme-primary) 10%, transparent), transparent 70%);
+  z-index: 0;
+}
+.aura-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============ 按钮 ============ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 200ms var(--ease), box-shadow 200ms var(--ease),
+    background 200ms var(--ease), border-color 200ms var(--ease);
+  will-change: transform;
+}
+.btn:hover {
+  transform: translateY(-2px);
+}
+.btn--primary {
+  background: var(--theme-primary);
+  color: var(--theme-base);
+  box-shadow: var(--shadow-glow);
+}
+.btn--primary:hover {
+  box-shadow: 0 0 36px color-mix(in srgb, var(--theme-primary) 70%, transparent);
+}
+.btn--ghost {
+  background: transparent;
+  border-color: var(--c-border-strong);
+  color: var(--theme-text);
+}
+.btn--ghost:hover {
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+}
+
+/* ============ 卡片 ============ */
+.card {
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform 300ms var(--ease), border-color 300ms var(--ease),
+    box-shadow 300ms var(--ease);
+}
+.card:hover {
+  transform: translateY(-6px);
+  border-color: var(--theme-primary);
+  box-shadow: var(--shadow-card), var(--shadow-glow);
+}
+
+/* 主题色描边发光（兼容旧 theme-card 类名，见 docs/09 §7） */
+.theme-card {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--c-border);
+  background: var(--c-bg-card);
+  transition: border-color 240ms var(--ease), box-shadow 240ms var(--ease),
+    transform 240ms var(--ease);
+}
+.theme-card:hover {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--theme-primary) 40%, transparent);
+  transform: translateY(-4px);
+}
+
+/* 标签/胶囊 */
+.tag {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 999px;
+  border: 1px solid var(--theme-primary);
+  color: var(--theme-primary);
+  background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
+  letter-spacing: 0.04em;
+}
+
+/* 区块标题（带主题色装饰线） */
+.section-title {
+  position: relative;
+  font-size: clamp(24px, 4vw, 34px);
+  margin-bottom: 8px;
+}
+.section-title::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 3px;
+  margin-top: 12px;
+  border-radius: 2px;
+  background: var(--theme-primary);
+}
+.section-sub {
+  color: var(--c-muted);
+  margin-bottom: 32px;
+}
+
+/* ============ 瀑布流容器 ============ */
 .masonry {
-  column-gap: 16px;
+  column-gap: 18px;
 }
 .masonry > * {
   break-inside: avoid;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 .masonry--lg {
   column-count: 3;
@@ -48,7 +221,6 @@ body[data-theme='kunpeng'] {
 .masonry--base {
   column-count: 1;
 }
-
 @media (min-width: 768px) {
   .masonry--responsive {
     column-count: 2;
@@ -60,13 +232,26 @@ body[data-theme='kunpeng'] {
   }
 }
 
-/* 卡片 hover 主题色描边发光（读取 --theme-primary） */
-.theme-card {
-  border-radius: 12px;
-  border: 1px solid transparent;
-  transition: border-color 200ms, box-shadow 200ms;
+/* ============ 动效 ============ */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.theme-card:hover {
-  border-color: var(--theme-primary);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--theme-primary) 40%, transparent);
+.animate-in {
+  animation: fade-up 700ms var(--ease) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,6 +1,11 @@
-/** * @Author: wj 3363891051@qq.com * @Date: 2026-08-12 10:00 * @LastEditors: wj 3363891051@qq.com *
-@LastEditTime: 2026-08-12 10:40 * @FilePath: apps/taiji-admin/src/views/MediaLibrary.vue *
-@Description: 媒体库（见 docs/11 §5），上传 + 列表读取，复用官网 Masonry 设计语言 */
+/**
+ * @Author: wj 3363891051@qq.com
+ * @Date: 2026-08-12 14:00
+ * @LastEditors: wj 3363891051@qq.com
+ * @LastEditTime: 2026-08-12 14:00
+ * @FilePath: apps/taiji-admin/src/views/MediaLibrary.vue
+ * @Description: 媒体库（见 docs/11 §5）：上传 + 列表读取，卡片网格展示（复用官网设计语言）。
+ */
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { ElUpload, ElButton, ElMessage, type UploadRequestOptions } from 'element-plus';
@@ -34,7 +39,7 @@ onMounted(() => load());
 const customUpload = async (options: UploadRequestOptions): Promise<void> => {
   const form = new FormData();
   form.append('file', options.file);
-  // 后端 MediaController.upload 为写操作需认证（回退 anonymous 仅兜底），正常流程 http 自动携带登录 JWT。
+  // 后端 MediaController.upload 为写操作需认证，正常流程 http 自动携带登录 JWT。
   // 提交 FormData 时 axios 自动设置 multipart 边界，无需手动 Content-Type。
   const res = await http.post<MediaVO>('/media/upload', form);
   if (res.code === 0 && res.data) {
@@ -48,15 +53,99 @@ const customUpload = async (options: UploadRequestOptions): Promise<void> => {
 
 <template>
   <div>
-    <ElUpload :http-request="customUpload" :show-file-list="false" list-type="picture-card">
-      <ElButton type="primary">上传素材</ElButton>
-    </ElUpload>
-    <div v-loading="loading" class="masonry masonry--responsive mt-4">
-      <div v-for="m in list" :key="m.id" class="theme-card p-2">
+    <div class="cms-page-head">
+      <div>
+        <h2 class="cms-page-title">媒体库</h2>
+        <p class="cms-page-sub">图片 / 视频素材管理</p>
+      </div>
+      <ElUpload :http-request="customUpload" :show-file-list="false" list-type="picture-card">
+        <ElButton type="primary">+ 上传素材</ElButton>
+      </ElUpload>
+    </div>
+
+    <div v-loading="loading" class="media-grid">
+      <div v-for="m in list" :key="m.id" class="cms-panel media-card">
         <!-- 仅 http(s) 链接走 <img>，mock:// 占位地址不可渲染（见 docs/14 §6） -->
-        <img v-if="m.url.startsWith('http')" :src="m.url" :alt="m.name" class="w-full rounded" />
-        <span>{{ m.name }}</span>
+        <div class="media-card__media">
+          <img v-if="m.url.startsWith('http')" :src="m.url" :alt="m.name" loading="lazy" />
+          <div v-else class="media-card__ph">{{ (m.name || '素材').slice(0, 1) }}</div>
+        </div>
+        <div class="media-card__foot">
+          <span class="media-card__name" :title="m.name">{{ m.name }}</span>
+          <span class="media-card__type">{{ m.type || 'file' }}</span>
+        </div>
+      </div>
+
+      <div v-if="!loading && !list.length" class="media-empty">
+        暂无素材，点击右上角上传
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  min-height: 160px;
+}
+.media-card {
+  overflow: hidden;
+  transition: transform 280ms var(--cms-ease), border-color 280ms var(--cms-ease);
+}
+.media-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--cms-primary);
+}
+.media-card__media {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--cms-bg-soft);
+}
+.media-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.media-card__ph {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--cms-primary);
+  background: linear-gradient(135deg, var(--cms-primary-soft), transparent);
+}
+.media-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+}
+.media-card__name {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.media-card__type {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: var(--cms-primary);
+  background: var(--cms-primary-soft);
+}
+.media-empty {
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+  padding: 48px;
+  border: 1px dashed var(--cms-border);
+  border-radius: var(--cms-radius);
+  color: var(--cms-muted);
+}
+</style>

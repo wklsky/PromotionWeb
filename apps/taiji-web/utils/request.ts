@@ -13,11 +13,16 @@ import axios, {
 } from 'axios';
 import type { ApiResponse } from 'taiji-shared';
 
+// SSR 服务端渲染时浏览器不存在 /api 相对地址，必须补全为绝对 URL（见 docs/14 部署）。
+// 服务端经 Nitro 代理到后端(:8080)，故基址为 http://localhost:8080/api；
+// 客户端仍走相对 /api，由浏览器与 nuxt.config 的 nitro routeRules 代理处理。
+const BASE_URL = import.meta.server ? 'http://localhost:8080/api' : '/api';
+
 // 后端统一 Result<T> = { code, message, data }，与 shared 的 ApiResponse 字段完全一致。
 // 响应拦截器解包到 response.data（即完整 ApiResponse），由 http 方法泛型 <T> 标注 data 类型，
 // 调用方直接 await http.get<X>('/news') 得到 ApiResponse<X>（见 docs/13 §1）
 const instance: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: BASE_URL,
   timeout: 10000,
 });
 

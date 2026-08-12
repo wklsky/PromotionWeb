@@ -10,6 +10,7 @@ package com.taiji.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
@@ -34,12 +35,12 @@ public class SecurityConfig {
                     "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**"
                 ).permitAll()
                 // 官网公开只读接口放行（无需 JWT，见 docs/13 只读端点）
-                .requestMatchers(
-                    "GET", "/api/news",
-                    "GET", "/api/content/**",
-                    "GET", "/api/jobs",
-                    "GET", "/api/media/**"
-                ).permitAll()
+                // 注意：requestMatchers(String... patterns) 会把所有字符串当 URL 模式，
+                // 必须显式使用 HttpMethod.GET 才能按方法+路径放行。
+                .requestMatchers(HttpMethod.GET, "/api/news").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/content/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/jobs").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/media/**").permitAll()
                 // 其余（写操作 / CMS 后台）需认证（RBAC 简版 admin/editor，见 docs/13 §9）
                 .anyRequest().authenticated()
             )

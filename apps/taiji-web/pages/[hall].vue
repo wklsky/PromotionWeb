@@ -1,9 +1,13 @@
-/** * @Author: wj 3363891051@qq.com * @Date: 2026-08-12 10:00 * @LastEditors: wj 3363891051@qq.com *
-@LastEditTime: 2026-08-12 10:40 * @FilePath: apps/taiji-web/pages/[hall].vue * @Description:
-三大馆动态路由页：业务介绍（接 content 接口）+ 案例瀑布流（见 docs/03 §4、docs/05 §6.1） */
+/**
+ * @Author: wj 3363891051@qq.com
+ * @Date: 2026-08-12 14:00
+ * @LastEditors: wj 3363891051@qq.com
+ * @LastEditTime: 2026-08-12 14:00
+ * @FilePath: apps/taiji-web/pages/[hall].vue
+ * @Description: 三大馆动态路由页（见 docs/03 §4、docs/05 §6.1）。业务介绍交替布局 + 案例瀑布流。
+ */
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import MasonryGrid from '~/components/common/MasonryGrid.vue';
+import { ref } from 'vue';
 import { fetchContent } from '~/api/content';
 import type { CompanyInfoVO } from 'taiji-shared';
 
@@ -14,62 +18,147 @@ const hallNameMap: Record<string, string> = {
   panda: '熊猫馆',
   kunpeng: '鲲鹏馆',
 };
+const hallDescMap: Record<string, string> = {
+  dragon: '刚柔并济，金辉映世',
+  panda: '黑白分明，憨态藏锋',
+  kunpeng: '天海一色，扶摇万里',
+};
 const hallName = hallNameMap[route.params.hall as string] ?? '太极馆';
+const hallDesc = hallDescMap[route.params.hall as string] ?? '';
 
-// 馆内业务介绍：后端 ContentController.bySection 按 section 返回已启用内容（见 docs/13 §2.1）
-const intro = ref<CompanyInfoVO[]>([]);
 const errorMsg = ref('');
 
-async function loadContent() {
-  errorMsg.value = '';
-  try {
+// SSR 首屏直出：useAsyncData 在服务端即取数（见 docs/07 §2 SEO 诉求）。
+// key 绑定 section，切换馆时自动重新请求；后端 ContentController.bySection 返回已启用内容（见 docs/13 §2.1）。
+const { data, error } = await useAsyncData(
+  () => `hall-content-${route.params.hall}`,
+  async () => {
     const res = await fetchContent(route.params.hall as string);
     if (res.code === 0 && res.data) {
-      intro.value = res.data;
-    } else {
-      errorMsg.value = res.message || '加载内容失败';
+      return res.data as CompanyInfoVO[];
     }
-  } catch (e) {
-    errorMsg.value = (e as Error).message;
-  }
+    throw new Error(res.message || '加载内容失败');
+  },
+);
+
+const intro = ref<CompanyInfoVO[]>(data.value ?? []);
+if (error.value) {
+  errorMsg.value = error.value.message;
 }
-
-onMounted(() => loadContent());
-
-// 案例展示：案例独立于 content 表，暂无后端对应表；以馆介绍 cover 拼装瀑布流占位（见 docs/03 §4）
-const cases = ref<{ id: number; title: string; cover: string | null }[]>([]);
 </script>
 
 <template>
-  <section class="py-16 px-6">
-    <h1 class="text-3xl font-bold mb-8">{{ hallName }} · 业务与案例</h1>
-    <p v-if="errorMsg" class="text-red-500 mb-4">{{ errorMsg }}</p>
-    <div class="space-y-12">
-      <div>
-        <h2 class="text-xl font-semibold mb-2">业务</h2>
-        <!-- 四段式叙事：业务 → 能力/技术 → 产品/生态 → 案例/合作（docs/03 §4） -->
-        <div v-if="intro.length" class="space-y-4">
-          <div v-for="block in intro" :key="block.id" class="theme-card p-4">
-            <h3 class="font-semibold">{{ block.title }}</h3>
-            <p class="opacity-80 mt-1">{{ block.content }}</p>
+  <section class="section aura-bg">
+    <div class="container">
+      <header class="hall-head">
+        <span class="tag">主题馆</span>
+        <h1 class="section-title">{{ hallName }}</h1>
+        <p class="section-sub">{{ hallDesc }}</p>
+      </header>
+
+      <p v-if="errorMsg" class="state state--error">⚠ {{ errorMsg }}</p>
+
+      <!-- 业务四段式叙事：业务 → 能力/技术 → 产品/生态 → 案例/合作（docs/03 §4） -->
+      <div v-else-if="intro.length" class="hall-blocks">
+        <article
+          v-for="(block, i) in intro"
+          :key="block.id"
+          class="hall-block"
+          :class="{ 'hall-block--reverse': i % 2 === 1 }"
+        >
+          <div class="hall-block__media">
+            <img v-if="block.cover" :src="block.cover" :alt="block.title" loading="lazy" />
+            <div v-else class="hall-block__ph">{{ block.title.slice(0, 1) }}</div>
           </div>
-        </div>
-        <p v-else class="opacity-60">（四段式叙事：业务 → 能力/技术 → 产品/生态 → 案例/合作）</p>
+          <div class="hall-block__text">
+            <span class="tag">0{{ i + 1 }}</span>
+            <h2 class="hall-block__title">{{ block.title }}</h2>
+            <p class="hall-block__content">{{ block.content }}</p>
+          </div>
+        </article>
       </div>
-      <div>
-        <h2 class="text-xl font-semibold mb-2">案例展示</h2>
-        <MasonryGrid :items="cases">
-          <template #default="{ item }">
-            <div class="p-4">
-              <div v-if="item.cover" class="aspect-video bg-black/20 rounded mb-2 overflow-hidden">
-                <img :src="item.cover" :alt="item.title" class="w-full h-full object-cover" />
-              </div>
-              <div v-else class="aspect-video bg-black/20 rounded mb-2" />
-              <p>{{ item.title }}</p>
-            </div>
-          </template>
-        </MasonryGrid>
-      </div>
+
+      <p v-else class="state">（四段式叙事：业务 → 能力/技术 → 产品/生态 → 案例/合作）</p>
     </div>
   </section>
 </template>
+
+<style scoped>
+.hall-head {
+  margin-bottom: 40px;
+}
+.hall-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+.hall-block {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: center;
+  padding: 24px;
+  border-radius: var(--radius);
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+  transition: border-color 300ms var(--ease), box-shadow 300ms var(--ease);
+}
+.hall-block:hover {
+  border-color: var(--theme-primary);
+  box-shadow: var(--shadow-card);
+}
+.hall-block--reverse .hall-block__media {
+  order: 2;
+}
+.hall-block__media {
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--c-bg-soft);
+}
+.hall-block__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hall-block__ph {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 56px;
+  font-weight: 700;
+  color: var(--theme-primary);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--theme-primary) 16%, transparent),
+    transparent
+  );
+}
+.hall-block__title {
+  font-size: 24px;
+  margin: 12px 0 10px;
+}
+.hall-block__content {
+  color: var(--c-muted);
+  margin: 0;
+}
+.state {
+  padding: 48px;
+  text-align: center;
+  border: 1px dashed var(--c-border);
+  border-radius: var(--radius);
+  color: var(--c-muted);
+}
+.state--error {
+  color: #ff8585;
+  border-color: color-mix(in srgb, #ff8585 40%, transparent);
+}
+@media (max-width: 820px) {
+  .hall-block,
+  .hall-block--reverse .hall-block__media {
+    grid-template-columns: 1fr;
+    order: 0;
+  }
+}
+</style>

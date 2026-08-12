@@ -1,0 +1,120 @@
+/**
+ * @Author: wj 3363891051@qq.com
+ * @Date: 2026-08-12 14:00
+ * @LastEditors: wj 3363891051@qq.com
+ * @LastEditTime: 2026-08-12 14:00
+ * @FilePath: apps/taiji-admin/src/styles.css
+ * @Description: CMS 后台全局样式（深色金主题）：设计令牌、布局、卡片、滚动条、动效。
+ */
+:root {
+  --cms-bg: #0f1115;
+  --cms-bg-soft: #161922;
+  --cms-panel: #1b1f2a;
+  --cms-border: #2a2f3c;
+  --cms-border-strong: #3a4150;
+  --cms-text: #e8eaf0;
+  --cms-muted: #8b93a7;
+  --cms-primary: #d4af37;
+  --cms-primary-soft: rgba(212, 175, 55, 0.14);
+  --cms-danger: #f06565;
+  --cms-radius: 12px;
+  --cms-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --cms-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+  background: var(--cms-bg);
+  color: var(--cms-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Element Plus 暗色变量对齐主题 */
+:root {
+  --el-color-primary: var(--cms-primary);
+  --el-bg-color: var(--cms-panel);
+  --el-bg-color-overlay: var(--cms-panel);
+  --el-text-color-primary: var(--cms-text);
+  --el-text-color-regular: var(--cms-text);
+  --el-border-color: var(--cms-border);
+  --el-border-color-light: var(--cms-border);
+  --el-fill-color-blank: var(--cms-panel);
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--cms-border-strong);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cms-muted);
+}
+
+/* 通用面板 */
+.cms-panel {
+  background: var(--cms-panel);
+  border: 1px solid var(--cms-border);
+  border-radius: var(--cms-radius);
+  box-shadow: var(--cms-shadow);
+}
+
+/* 错误提示（替代未引入的 Tailwind 类，见 NewsManage.vue） */
+.cms-error-tip {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: var(--cms-radius);
+  color: var(--cms-danger);
+  background: color-mix(in srgb, var(--cms-danger) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cms-danger) 40%, transparent);
+  font-size: 14px;
+}
+
+/* 页面标题区 */
+.cms-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.cms-page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+.cms-page-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--cms-muted);
+}
+
+/* 入场动画 */
+@keyframes cms-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.cms-fade-in {
+  animation: cms-fade-up 420ms var(--cms-ease) both;
+}

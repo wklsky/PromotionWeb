@@ -1,64 +1,69 @@
-/** * @Author: wj 3363891051@qq.com * @Date: 2026-08-12 10:00 * @LastEditors: wj 3363891051@qq.com *
-@LastEditTime: 2026-08-12 10:40 * @FilePath: apps/taiji-web/pages/news.vue * @Description:
-新闻中心，瀑布流展示已发布新闻（见 docs/03 §4、docs/09 §7） */
+/**
+ * @Author: wj 3363891051@qq.com
+ * @Date: 2026-08-12 14:00
+ * @LastEditors: wj 3363891051@qq.com
+ * @LastEditTime: 2026-08-12 14:00
+ * @FilePath: apps/taiji-web/pages/news.vue
+ * @Description: 新闻动态页（见 docs/13 §2.2）。SSR 首屏直出列表，卡片化展示 + 空态/错误态。
+ */
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import MasonryGrid from '~/components/common/MasonryGrid.vue';
-import type { MasonryItem } from '~/components/common/MasonryGrid.vue';
+import { ref } from 'vue';
+import NewsCard from '~/components/common/NewsCard.vue';
 import { fetchNews } from '~/api/content';
 import type { NewsListVO } from 'taiji-shared';
 
-const news = ref<MasonryItem[]>([]);
-const loading = ref(false);
 const errorMsg = ref('');
 
-// 后端 GET /api/news 返回 Result<PageResult<News>>，列表字段与 NewsListVO 对齐（见 docs/13 §2.2）
-// 仅展示已发布(status=1)新闻；映射为瀑布流卡片，cover 缺失时由卡片兜底占位
-async function loadNews(page = 1, size = 20) {
-  loading.value = true;
-  errorMsg.value = '';
-  try {
-    const res = await fetchNews({ page, size });
-    if (res.code === 0 && res.data) {
-      news.value = res.data.list.map((n: NewsListVO) => ({
-        id: n.id,
-        title: n.title,
-        cover: n.cover,
-        category: n.category,
-      }));
-    } else {
-      errorMsg.value = res.message || '加载新闻失败';
-    }
-  } catch (e) {
-    errorMsg.value = (e as Error).message;
-  } finally {
-    loading.value = false;
+// SSR 首屏直出：useAsyncData 在服务端即发起请求（见 docs/07 §2 SEO 诉求）。
+// 仅展示已发布(status=1)新闻，后端按 page/size 分页返回（见 docs/13 §2.2）。
+const { data, error } = await useAsyncData('news-list', async () => {
+  const res = await fetchNews({ page: 1, size: 20 });
+  if (res.code === 0 && res.data) {
+    return res.data.list as NewsListVO[];
   }
-}
+  throw new Error(res.message || '加载新闻失败');
+});
 
-onMounted(() => loadNews());
+const news = ref<NewsListVO[]>(data.value ?? []);
+if (error.value) {
+  errorMsg.value = error.value.message;
+}
 </script>
 
 <template>
-  <section class="py-16 px-6">
-    <h1 class="text-3xl font-bold mb-8">新闻中心</h1>
-    <p v-if="errorMsg" class="text-red-500 mb-4">{{ errorMsg }}</p>
-    <p v-else-if="loading" class="opacity-60 mb-4">加载中…</p>
-    <MasonryGrid v-else :items="news">
-      <template #default="{ item }">
-        <div class="p-4">
-          <!-- cover 缺失时以纯色块兜底，避免瀑布流出现破图（见 docs/09 §7） -->
-          <div v-if="item.cover" class="aspect-video bg-black/20 rounded mb-2 overflow-hidden">
-            <img
-              :src="String(item.cover)"
-              :alt="String(item.title)"
-              class="w-full h-full object-cover"
-            />
-          </div>
-          <div v-else class="aspect-video bg-black/20 rounded mb-2" />
-          <p>{{ item.title }}</p>
-        </div>
-      </template>
-    </MasonryGrid>
+  <section class="section aura-bg">
+    <div class="container">
+      <header class="news-head">
+        <h1 class="section-title">新闻动态</h1>
+        <p class="section-sub">企业动态 · 行业资讯 · 技术文章</p>
+      </header>
+
+      <p v-if="errorMsg" class="state state--error">⚠ {{ errorMsg }}</p>
+
+      <div v-else-if="news.length" class="masonry masonry--responsive">
+        <NewsCard v-for="item in news" :key="item.id" :item="item" />
+      </div>
+
+      <div v-else class="state state--empty">
+        <p>暂无新闻，敬请期待</p>
+      </div>
+    </div>
   </section>
 </template>
+
+<style scoped>
+.news-head {
+  margin-bottom: 36px;
+}
+.state {
+  padding: 48px;
+  text-align: center;
+  border: 1px dashed var(--c-border);
+  border-radius: var(--radius);
+  color: var(--c-muted);
+}
+.state--error {
+  color: #ff8585;
+  border-color: color-mix(in srgb, #ff8585 40%, transparent);
+}
+</style>
