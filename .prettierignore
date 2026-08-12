@@ -1,0 +1,22 @@
+# 依赖与构建产物
+node_modules
+**/node_modules
+**/dist
+**/.output
+**/.nuxt
+**/target
+**/build
+
+# 锁文件
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# 自动生成
+**/*.min.js
+**/*.d.ts
+
+# 文档与 SQL 不格式化
+docs
+db
+*.md

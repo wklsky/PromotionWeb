@@ -1,0 +1,7 @@
+# 太极馆 monorepo 工作区声明，聚合官网、CMS 与共享契约包
+packages:
+  - "packages/*"
+  - "apps/*"
+allowBuilds:
+  esbuild: true
+  vue-demi: true

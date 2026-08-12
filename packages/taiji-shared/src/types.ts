@@ -54,6 +54,8 @@ export interface NewsListVO {
   category: NewsCategory;
   cover: string | null;
   author: string | null;
+  /** 发布状态：1=已发布 0=草稿（后端 News.status 直出，与 CONTENT_STATUS 一致） */
+  status: number;
   publishTime: string | null;
   viewCount: number;
 }

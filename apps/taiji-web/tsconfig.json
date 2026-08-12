@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["nuxt", "node"],
+    "moduleResolution": "Bundler"
+  },
+  "include": ["**/*.ts", "**/*.vue", ".nuxt/types/**/*.ts"],
+  "exclude": ["node_modules", ".nuxt", "dist"]
+}

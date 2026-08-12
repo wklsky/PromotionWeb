@@ -98,7 +98,7 @@ CMS
 | 登录 | ElForm + ElInput | 校验用户名/密码，失败提示，存 token 至 Pinia+localStorage |
 | 内容/新闻/招聘列表 | ElTable + ElPagination + ElTag | 行内编辑/删除，批量上下架 |
 | 编辑抽屉/弹窗 | ElForm + 富文本 + ElUpload | 封面选媒体库，SEO 折叠区 |
-| 媒体库 | ElUpload + 瀑布流 | 直传 CDN，回填 URL |
+| 媒体库 | ElUpload + 瀑布流 | 直传 CDN，回填 URL（瀑布流布局复用官网 `MasonryGrid` 设计语言，见 05 §4.1） |
 | 仪表盘 | ElCard + 简易统计 | 内容数/待审/今日投递概览 |
 
 ## 6. 数据流与契约

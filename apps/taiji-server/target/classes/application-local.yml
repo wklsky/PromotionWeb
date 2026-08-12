@@ -1,0 +1,34 @@
+# 本地快速验证 profile：无需 MySQL/Redis 即可启动，验证接口契约与上下文加载
+# 用法：mvn spring-boot:run -Dspring-boot.run.profiles=local
+spring:
+  # 用 H2 内存库替代 MySQL，便于无数据库环境联调（生产用 application.yml 的 MySQL）
+  datasource:
+    url: jdbc:h2:mem:taiji;DB_CLOSE_DELAY=-1;MODE=MySQL
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  # 禁用 Redis 自动配置，避免无 Redis 时启动失败（Auth 登出黑名单在本地验证时不可用）
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+  # 关闭 JPA 无关校验，MyBatis-Plus 不需 ddl-auto
+  sql:
+    init:
+      mode: never
+
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# H2 控制台（可选）
+h2:
+  console:
+    enabled: true
+
+# 本地验证无 MinIO：强制占位模式，上传返回 mock:// URL 但流程闭环可联调
+minio:
+  endpoint: http://localhost:9000
+  bucket: taiji-media
+  mock: true

@@ -1,0 +1,20 @@
+{
+  "name": "taiji-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "太极馆企业官网 monorepo：官网(taiji-web)、CMS(taiji-admin)、后端(taiji-server) 与共享契约(taiji-shared)",
+  "scripts": {
+    "build:shared": "pnpm --filter taiji-shared build",
+    "dev:web": "pnpm --filter taiji-web dev",
+    "dev:admin": "pnpm --filter taiji-admin dev",
+    "typecheck": "pnpm -r typecheck",
+    "format": "prettier --write \"apps/**/*.{ts,vue,js,json}\" \"packages/**/*.{ts,js,json}\"",
+    "format:java": "mvn -q -f apps/taiji-server/pom.xml spotless:apply"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6",
+    "prettier-plugin-java": "^2.10.3",
+    "typescript": "^5.4.0"
+  },
+  "packageManager": "pnpm@11.21.0"
+}

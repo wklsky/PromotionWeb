@@ -1,0 +1,72 @@
+/**
+ * @Author: wj 3363891051@qq.com
+ * @Date: 2026-08-12 10:00
+ * @LastEditors: wj 3363891051@qq.com
+ * @LastEditTime: 2026-08-12 10:00
+ * @FilePath: apps/taiji-web/assets/styles/main.css
+ * @Description: 官网全局样式与三大馆主题 CSS 变量（与 taiji-shared/theme.ts 的 THEME_PALETTES 保持一致）
+ */
+
+/* 默认（龙虎馆）主题变量，由 useTheme 按路由覆盖 */
+:root {
+  --theme-base: #080808;
+  --theme-primary: #d4af37; /* 金 */
+  --theme-accent: #f5f5f5;
+  --theme-text: #f5f5f5;
+}
+
+/* 熊猫馆：黑白主调（见 docs/05 §2.2） */
+body[data-theme='panda'] {
+  --theme-base: #080808;
+  --theme-primary: #f5f5f5; /* 白 */
+  --theme-accent: #9ca3af;
+  --theme-text: #f5f5f5;
+}
+
+/* 鲲鹏馆：天蓝白主调（见 docs/05 §2.2） */
+body[data-theme='kunpeng'] {
+  --theme-base: #f5f5f5; /* 白底 */
+  --theme-primary: #1677ff; /* 天蓝 */
+  --theme-accent: #0a1a3f; /* 深蓝字 */
+  --theme-text: #0a1a3f;
+}
+
+/* 瀑布流容器令牌（见 docs/05 §6.1、docs/09 §7） */
+.masonry {
+  column-gap: 16px;
+}
+.masonry > * {
+  break-inside: avoid;
+  margin-bottom: 16px;
+}
+.masonry--lg {
+  column-count: 3;
+}
+.masonry--md {
+  column-count: 2;
+}
+.masonry--base {
+  column-count: 1;
+}
+
+@media (min-width: 768px) {
+  .masonry--responsive {
+    column-count: 2;
+  }
+}
+@media (min-width: 1280px) {
+  .masonry--responsive {
+    column-count: 3;
+  }
+}
+
+/* 卡片 hover 主题色描边发光（读取 --theme-primary） */
+.theme-card {
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: border-color 200ms, box-shadow 200ms;
+}
+.theme-card:hover {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--theme-primary) 40%, transparent);
+}
