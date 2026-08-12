@@ -1,0 +1,33 @@
+# 依赖
+node_modules/
+.pnpm-store/
+
+# 构建产物
+dist/
+.output/
+.nuxt/
+*.tsbuildinfo
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 环境变量（含密钥，禁止入库）
+.env
+.env.*
+!.env.example
+
+# 本地编辑/OS
+.DS_Store
+Thumbs.db
+idea/
+.vscode/
+*.local
+
+# 依赖缓存
+node_cache/
+
+# 类型检查缓存
+packages/*/dist/
