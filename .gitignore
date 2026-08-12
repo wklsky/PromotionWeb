@@ -8,6 +8,17 @@ dist/
 .nuxt/
 *.tsbuildinfo
 
+# Java / Maven 构建产物
+target/
+build/
+.gradle/
+*.class
+*.jar
+*.war
+*.ear
+.idea/
+*.iml
+
 # 日志
 *.log
 npm-debug.log*
