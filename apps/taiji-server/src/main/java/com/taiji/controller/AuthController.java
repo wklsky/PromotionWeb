@@ -9,6 +9,7 @@
 package com.taiji.controller;
 
 import com.taiji.common.Result;
+import com.taiji.security.JwtUtil;
 import com.taiji.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,17 +24,21 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, JwtUtil jwtUtil) {
         this.authService = authService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/login")
     public Result<Map<String, String>> login(@RequestBody Map<String, String> body) {
         // 返回结构对齐 taiji-shared.LoginResultVO：{ token, role, username }
-        // TODO: AuthServiceImpl.login 当前抛 UnsupportedOperationException，需接入 AdminUserMapper + BCrypt
         String token = authService.login(body.get("username"), body.get("password"));
-        return Result.success(Map.of("token", token, "role", "admin", "username", body.get("username")));
+        // 角色从 JWT 声明解析（签发格式 "username|role"），不硬编码，保证 RBAC 简版 admin/editor 正确回传
+        String[] principal = jwtUtil.parsePrincipal(token);
+        String role = principal.length > 1 ? principal[1] : "editor";
+        return Result.success(Map.of("token", token, "role", role, "username", principal[0]));
     }
 
     @PostMapping("/logout")

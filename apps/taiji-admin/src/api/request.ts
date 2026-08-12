@@ -2,17 +2,21 @@
  * @Author: wj 3363891051@qq.com
  * @Date: 2026-08-12 10:00
  * @LastEditors: wj 3363891051@qq.com
- * @LastEditTime: 2026-08-12 10:33
+ * @LastEditTime: 2026-08-12 10:42
  * @FilePath: apps/taiji-admin/src/api/request.ts
- * @Description: 后台统一 Axios 实例（见 docs/13 §1 响应契约）
+ * @Description: 后台统一 Axios 实例与 http 封装（见 docs/13 §1 响应契约、docs/14 §4 鉴权）
  */
-import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
+import axios, {
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+  type AxiosResponse,
+} from 'axios';
 import type { ApiResponse } from 'taiji-shared';
 
 const TOKEN_KEY = 'taiji_admin_token';
 
 // 后端统一 Result<T> = { code, message, data }，与 shared 的 ApiResponse 字段一致。
-// 响应拦截器不解包，交还完整 ApiResponse，由调用方取 .data（与 taiji-web 保持一致契约）
+// 响应拦截器解包到 response.data（完整 ApiResponse），http 方法泛型 <T> 标注 data 类型（见 docs/13 §1）
 const instance: AxiosInstance = axios.create({
   baseURL: '/api',
   timeout: 10000,
@@ -28,7 +32,7 @@ instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 });
 
 instance.interceptors.response.use(
-  (response) => response.data as ApiResponse<unknown>,
+  (response: AxiosResponse) => response.data,
   (error) => {
     const msg = error?.response?.data?.message || error.message || '请求失败';
     if (error?.response?.status === 401) {
@@ -40,6 +44,18 @@ instance.interceptors.response.use(
     return Promise.reject(new Error(msg));
   },
 );
+
+// http 封装：方法泛型 T 即 ApiResponse.data 的类型，返回 Promise<ApiResponse<T>>
+export const http = {
+  get: <T>(url: string, config?: Record<string, unknown>) =>
+    instance.get<ApiResponse<T>>(url, config).then((r) => r.data as ApiResponse<T>),
+  post: <T>(url: string, data?: unknown, config?: Record<string, unknown>) =>
+    instance.post<ApiResponse<T>>(url, data, config).then((r) => r.data as ApiResponse<T>),
+  put: <T>(url: string, data?: unknown, config?: Record<string, unknown>) =>
+    instance.put<ApiResponse<T>>(url, data, config).then((r) => r.data as ApiResponse<T>),
+  delete: <T>(url: string, config?: Record<string, unknown>) =>
+    instance.delete<ApiResponse<T>>(url, config).then((r) => r.data as ApiResponse<T>),
+};
 
 export { TOKEN_KEY };
 export default instance;

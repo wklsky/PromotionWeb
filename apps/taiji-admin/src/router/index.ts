@@ -13,6 +13,10 @@ export default createRouter({
   routes: [
     { path: '/', redirect: '/news' },
     {
+      path: '/login',
+      component: () => import('@/views/Login.vue'),
+    },
+    {
       path: '/news',
       component: () => import('@/views/NewsManage.vue'),
     },
