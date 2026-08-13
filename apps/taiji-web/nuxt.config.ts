@@ -21,6 +21,9 @@ export default defineNuxtConfig({
       title: '太极馆 · 企业官网',
       htmlAttrs: { lang: 'zh-CN' },
     },
+    // 路由/布局转场（见 docs/16 §4.2），reduced-motion 由 main.css 全局降级
+    pageTransition: { name: 'page', mode: 'out-in' },
+    layoutTransition: { name: 'layout', mode: 'out-in' },
   },
   // 开发期将 /api 反代到 Spring Boot(:8080)，避免浏览器直连 CORS/404（见 docs/14 部署）
   // 注意：代理目标必须保留 /api 前缀，否则后端收到的是 /content/panda 而非 /api/content/panda，

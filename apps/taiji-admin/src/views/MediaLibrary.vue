@@ -1,22 +1,23 @@
-/**
+<!--
  * @Author: wj 3363891051@qq.com
  * @Date: 2026-08-12 14:00
  * @LastEditors: wj 3363891051@qq.com
- * @LastEditTime: 2026-08-12 14:00
+ * @LastEditTime: 2026-08-13
  * @FilePath: apps/taiji-admin/src/views/MediaLibrary.vue
- * @Description: 媒体库（见 docs/11 §5）：上传 + 列表读取，卡片网格展示（复用官网设计语言）。
- */
+ * @Description: 媒体库（见 docs/11 §5、docs/16 §4.3）。上传 + 列表读取，卡片网格；预览弹窗 + 删除。
+ -->
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { ElUpload, ElButton, ElMessage, type UploadRequestOptions } from 'element-plus';
+import { computed, onMounted, ref } from 'vue';
+import { ElUpload, ElButton, ElMessage, ElDialog, ElMessageBox, type UploadRequestOptions } from 'element-plus';
 import { http } from '~/api/request';
-import { listMedia } from '~/api/media';
+import { listMedia, deleteMedia } from '~/api/media';
 import type { MediaVO } from 'taiji-shared';
+import { filterMedia } from '~/utils/business';
 
 const list = ref<MediaVO[]>([]);
 const loading = ref(false);
+const keyword = ref('');
 
-// 媒体列表：GET /api/media 已放行只读（见 SecurityConfig）
 async function load() {
   loading.value = true;
   try {
@@ -33,26 +34,65 @@ async function load() {
   }
 }
 
+// 搜索（按名称，逻辑抽至 utils/business 便于单测，见 docs/16 §4.4）
+const filtered = computed(() => filterMedia(list.value, keyword.value));
+
 onMounted(() => load());
 
-// 自定义上传：经 request 实例携带 JWT，避免原生 action 不附加 Authorization 导致写操作 401（见 docs/14 §4）
+// 自定义上传：经 request 实例携带 JWT，避免原生 action 不附加 Authorization 导致写操作 401
+type UploadErr = Parameters<NonNullable<UploadRequestOptions['onError']>>[0];
 const customUpload = async (options: UploadRequestOptions): Promise<void> => {
   const form = new FormData();
   form.append('file', options.file);
-  // 后端 MediaController.upload 为写操作需认证，正常流程 http 自动携带登录 JWT。
-  // 提交 FormData 时 axios 自动设置 multipart 边界，无需手动 Content-Type。
-  const res = await http.post<MediaVO>('/media/upload', form);
-  if (res.code === 0 && res.data) {
-    list.value.unshift(res.data);
-    ElMessage.success('上传成功');
-  } else {
-    ElMessage.error(res.message || '上传失败');
+  try {
+    const res = await http.post<MediaVO>('/media/upload', form);
+    if (res.code === 0 && res.data) {
+      list.value.unshift(res.data);
+      ElMessage.success('上传成功');
+      options.onSuccess(res.data);
+    } else {
+      const msg = res.message || '上传失败';
+      ElMessage.error(msg);
+      options.onError(new Error(msg) as unknown as UploadErr);
+    }
+  } catch (e) {
+    const msg = (e as Error).message;
+    ElMessage.error(msg);
+    options.onError(new Error(msg) as unknown as UploadErr);
   }
 };
+
+// 预览弹窗
+const previewVisible = ref(false);
+const previewData = ref<MediaVO | null>(null);
+function openPreview(m: MediaVO): void {
+  previewData.value = m;
+  previewVisible.value = true;
+}
+
+// 删除（docs/16 §4.3）
+async function onDelete(m: MediaVO) {
+  try {
+    await ElMessageBox.confirm(`确认删除「${m.name}」？`, '删除确认', {
+      type: 'warning',
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+    });
+  } catch {
+    return; // 用户取消
+  }
+  const res = await deleteMedia(m.id);
+  if (res.code === 0) {
+    ElMessage.success('已删除');
+    list.value = list.value.filter((x) => x.id !== m.id);
+  } else {
+    ElMessage.error(res.message || '删除失败');
+  }
+}
 </script>
 
 <template>
-  <div>
+  <div class="cms-fade-in">
     <div class="cms-page-head">
       <div>
         <h2 class="cms-page-title">媒体库</h2>
@@ -63,27 +103,65 @@ const customUpload = async (options: UploadRequestOptions): Promise<void> => {
       </ElUpload>
     </div>
 
+    <div class="cms-toolbar">
+      <ElInput
+        v-model="keyword"
+        placeholder="搜索素材名称"
+        clearable
+        class="cms-toolbar__search"
+      />
+    </div>
+
     <div v-loading="loading" class="media-grid">
-      <div v-for="m in list" :key="m.id" class="cms-panel media-card">
-        <!-- 仅 http(s) 链接走 <img>，mock:// 占位地址不可渲染（见 docs/14 §6） -->
+      <div
+        v-for="m in filtered"
+        :key="m.id"
+        class="cms-panel media-card"
+        @click="openPreview(m)"
+      >
         <div class="media-card__media">
           <img v-if="m.url.startsWith('http')" :src="m.url" :alt="m.name" loading="lazy" />
           <div v-else class="media-card__ph">{{ (m.name || '素材').slice(0, 1) }}</div>
         </div>
         <div class="media-card__foot">
           <span class="media-card__name" :title="m.name">{{ m.name }}</span>
-          <span class="media-card__type">{{ m.type || 'file' }}</span>
+          <div class="media-card__actions">
+            <button class="media-card__del" title="删除" @click.stop="onDelete(m)">✕</button>
+          </div>
         </div>
       </div>
 
-      <div v-if="!loading && !list.length" class="media-empty">
-        暂无素材，点击右上角上传
+      <div v-if="!loading && !filtered.length" class="media-empty">
+        {{ keyword ? '无匹配素材' : '暂无素材，点击右上角上传' }}
       </div>
     </div>
+
+    <!-- 预览弹窗 -->
+    <ElDialog v-model="previewVisible" title="素材预览" width="640px">
+      <div v-if="previewData" class="media-preview">
+        <img v-if="previewData.url.startsWith('http')" :src="previewData.url" :alt="previewData.name" class="media-preview__img" />
+        <div v-else class="media-preview__ph">{{ (previewData.name || '素材').slice(0, 1) }}</div>
+        <dl class="media-preview__meta">
+          <div><dt>名称</dt><dd>{{ previewData.name }}</dd></div>
+          <div><dt>类型</dt><dd>{{ previewData.type || 'file' }}</dd></div>
+          <div><dt>大小</dt><dd>{{ previewData.size ? (previewData.size / 1024).toFixed(1) + ' KB' : '—' }}</dd></div>
+          <div><dt>上传</dt><dd>{{ previewData.createTime?.slice(0, 19) || '—' }}</dd></div>
+        </dl>
+      </div>
+    </ElDialog>
   </div>
 </template>
 
 <style scoped>
+.cms-toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.cms-toolbar__search {
+  max-width: 280px;
+}
 .media-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -92,6 +170,7 @@ const customUpload = async (options: UploadRequestOptions): Promise<void> => {
 }
 .media-card {
   overflow: hidden;
+  cursor: pointer;
   transition: transform 280ms var(--cms-ease), border-color 280ms var(--cms-ease);
 }
 .media-card:hover {
@@ -131,13 +210,20 @@ const customUpload = async (options: UploadRequestOptions): Promise<void> => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.media-card__type {
+.media-card__del {
   flex-shrink: 0;
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  color: var(--cms-primary);
-  background: var(--cms-primary-soft);
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid var(--cms-border);
+  background: transparent;
+  color: var(--cms-muted);
+  cursor: pointer;
+  transition: color 160ms var(--cms-ease), border-color 160ms var(--cms-ease);
+}
+.media-card__del:hover {
+  color: var(--cms-danger);
+  border-color: var(--cms-danger);
 }
 .media-empty {
   grid-column: 1 / -1;
@@ -147,5 +233,38 @@ const customUpload = async (options: UploadRequestOptions): Promise<void> => {
   border: 1px dashed var(--cms-border);
   border-radius: var(--cms-radius);
   color: var(--cms-muted);
+}
+.media-preview__img {
+  width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  border-radius: var(--cms-radius);
+  background: var(--cms-bg);
+}
+.media-preview__ph {
+  display: grid;
+  place-items: center;
+  height: 200px;
+  font-size: 64px;
+  font-weight: 700;
+  color: var(--cms-primary);
+}
+.media-preview__meta {
+  margin: 16px 0 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.media-preview__meta div {
+  display: flex;
+  gap: 8px;
+}
+.media-preview__meta dt {
+  color: var(--cms-muted);
+  font-size: 13px;
+}
+.media-preview__meta dd {
+  margin: 0;
+  font-size: 13px;
 }
 </style>

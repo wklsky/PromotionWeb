@@ -7,11 +7,16 @@
  * @Description: 后台新闻接口（CMS 写操作，需 JWT，见 docs/13 §2.3、docs/14）
  */
 import { http } from '~/api/request';
-import type { PageResult, NewsListVO, NewsDTO } from 'taiji-shared';
+import type { PageResult, NewsListVO, NewsDTO, NewsDetailVO } from 'taiji-shared';
 
 // 读取新闻列表：后端 GET /api/news 已放行（只读），但 CMS 场景统一带 token（见 SecurityConfig）
 export function listNews(params: { page?: number; size?: number }) {
   return http.get<PageResult<NewsListVO>>('/news', { params });
+}
+
+// 新闻详情：GET /api/news/{id}，用于编辑时回填正文（避免 openEdit 用空 content 覆盖后端正文，见 docs/16 §4.4）
+export function getNews(id: number) {
+  return http.get<NewsDetailVO>(`/news/${id}`);
 }
 
 // 新增新闻：POST /api/news，需认证（见 docs/13 §2.3）

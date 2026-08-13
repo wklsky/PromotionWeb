@@ -17,8 +17,9 @@ onMounted(() => useTheme());
 
 <template>
   <div class="site-shell">
+    <a href="#main" class="skip-link">跳到主内容</a>
     <AppHeader />
-    <main class="site-main">
+    <main id="main" class="site-main">
       <NuxtPage />
     </main>
     <AppFooter />

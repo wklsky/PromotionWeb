@@ -118,3 +118,135 @@ body {
 .cms-fade-in {
   animation: cms-fade-up 420ms var(--cms-ease) both;
 }
+
+/* a11y 焦点态（P0：键盘可达性，见 docs/16 §4.1） */
+:focus-visible {
+  outline: 2px solid var(--cms-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.cms-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============ Element Plus 深度覆写（P0：统一暗金语系，见 docs/16 §4.1/§4.4） ============ */
+/* 整体避免组件自带白底/蓝光，统一落到 cms 令牌 */
+.el-button {
+  border-radius: var(--cms-radius);
+  font-weight: 600;
+  transition: transform var(--cms-ease) 160ms, box-shadow var(--cms-ease) 160ms,
+    background var(--cms-ease) 160ms;
+}
+.el-button--primary {
+  --el-button-bg-color: var(--cms-primary);
+  --el-button-border-color: var(--cms-primary);
+  --el-button-text-color: #0f1115;
+  --el-button-hover-bg-color: color-mix(in srgb, var(--cms-primary) 86%, #fff);
+  --el-button-hover-border-color: color-mix(in srgb, var(--cms-primary) 86%, #fff);
+  --el-button-hover-text-color: #0f1115;
+  --el-button-active-bg-color: var(--cms-primary);
+  --el-button-active-border-color: var(--cms-primary);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--cms-primary) 30%, transparent);
+}
+.el-button--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--cms-primary) 45%, transparent);
+}
+
+/* 输入框聚焦环 */
+.el-input__wrapper,
+.el-textarea__inner {
+  background: var(--cms-bg);
+  border-radius: var(--cms-radius);
+  box-shadow: 0 0 0 1px var(--cms-border) inset;
+  transition: box-shadow 160ms var(--cms-ease);
+}
+.el-input__wrapper.is-focus,
+.el-textarea__inner:focus {
+  box-shadow: 0 0 0 1px var(--cms-primary) inset, 0 0 0 3px var(--cms-primary-soft);
+}
+
+/* 表格：表头、斑马纹、行 hover 发光 */
+.el-table {
+  --el-table-bg-color: var(--cms-panel);
+  --el-table-tr-bg-color: var(--cms-panel);
+  --el-table-header-bg-color: var(--cms-bg-soft);
+  --el-table-border-color: var(--cms-border);
+  --el-table-row-hover-bg-color: color-mix(in srgb, var(--cms-primary) 10%, var(--cms-panel));
+  --el-table-text-color: var(--cms-text);
+  --el-table-header-text-color: var(--cms-muted);
+  background: transparent;
+  border-radius: var(--cms-radius);
+  overflow: hidden;
+}
+.el-table th.el-table__cell {
+  font-weight: 700;
+  background: var(--cms-bg-soft);
+}
+.el-table .el-table__row {
+  transition: box-shadow 160ms var(--cms-ease);
+}
+.el-table .el-table__row:hover > td.el-table__cell {
+  box-shadow: inset 3px 0 0 var(--cms-primary);
+}
+.el-table .el-table__cell {
+  border-bottom: 1px solid var(--cms-border);
+}
+
+/* 标签主题化 */
+.el-tag {
+  border-radius: 999px;
+  border: 1px solid var(--cms-primary);
+  color: var(--cms-primary);
+  background: var(--cms-primary-soft);
+}
+.el-tag--dark {
+  background: var(--cms-primary);
+  color: #0f1115;
+  border-color: var(--cms-primary);
+}
+.el-tag--success {
+  border-color: #4caf7d;
+  color: #6ee7a8;
+  background: color-mix(in srgb, #4caf7d 16%, transparent);
+}
+.el-tag--info {
+  border-color: var(--cms-border-strong);
+  color: var(--cms-muted);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* 对话框圆角与令牌 */
+.el-dialog {
+  --el-dialog-bg-color: var(--cms-panel);
+  --el-dialog-title-font-size: 18px;
+  border-radius: var(--cms-radius);
+  border: 1px solid var(--cms-border);
+  box-shadow: var(--cms-shadow);
+}
+.el-dialog__title {
+  color: var(--cms-text);
+  font-weight: 700;
+}
+.el-overlay-dialog .el-dialog__body {
+  color: var(--cms-text);
+}
+
+/* 分页器 */
+.el-pagination {
+  --el-pagination-button-bg-color: var(--cms-panel);
+  --el-pagination-hover-color: var(--cms-primary);
+  color: var(--cms-muted);
+}
+.el-pagination .el-pager li.is-active {
+  color: var(--cms-primary);
+  font-weight: 700;
+}

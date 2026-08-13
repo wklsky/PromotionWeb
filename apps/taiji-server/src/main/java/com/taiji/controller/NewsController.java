@@ -42,6 +42,12 @@ public class NewsController {
         return Result.success(PageResult.from(data));
     }
 
+    // 新闻详情：供 CMS 编辑回填正文（见 docs/13 §2.2、docs/16 §4.4 修复 openEdit 覆盖正文）
+    @GetMapping("/{id}")
+    public Result<News> detail(@PathVariable Long id) {
+        return Result.success(newsService.getById(id));
+    }
+
     // CMS 写操作：需带 JWT（SecurityConfig 已 authenticated），由前端 admin 调用（见 docs/13 §2.3）
     @PostMapping
     public Result<Long> save(@RequestBody News news) {

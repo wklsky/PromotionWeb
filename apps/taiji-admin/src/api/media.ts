@@ -13,3 +13,8 @@ import type { PageResult, MediaVO } from 'taiji-shared';
 export function listMedia(params: { page?: number; size?: number }) {
   return http.get<PageResult<MediaVO>>('/media', { params });
 }
+
+// 删除媒体：DELETE /api/media/{id}，需认证
+export function deleteMedia(id: number) {
+  return http.delete<boolean>(`/media/${id}`);
+}

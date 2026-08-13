@@ -33,6 +33,26 @@
   --radius-sm: 10px;
   --maxw: 1200px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* 语义间距档（P0 收口，消除各页 spacing 漂移） */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 14px;
+  --space-4: 24px;
+  --space-5: 40px;
+  --space-6: 64px;
+
+  /* 层级表（统一 z-index，避免散落 magic number） */
+  --z-header: 50;
+  --z-overlay: 200;
+  --z-modal: 1000;
+  --z-toast: 2000;
+  --z-cursor: 3000;
+
+  /* 动效时长档（统一 transition，便于集中降级） */
+  --dur-fast: 160ms;
+  --dur-base: 280ms;
+  --dur-slow: 600ms;
 }
 
 /* ============ 基础重置与排版 ============ */
@@ -73,6 +93,42 @@ a {
 img {
   display: block;
   max-width: 100%;
+}
+
+/* ============ a11y 基础（P0：焦点态 + 跳转锚点 + 屏幕阅读器） ============ */
+:focus-visible {
+  outline: 2px solid var(--theme-primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+/* 跳转锚点：键盘聚焦时显形，点击/跳过直达主内容（a11y 基础） */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translate(-50%, -120%);
+  z-index: var(--z-toast);
+  padding: 10px 20px;
+  background: var(--theme-primary);
+  color: var(--theme-base);
+  border-radius: 999px;
+  font-weight: 600;
+  box-shadow: var(--shadow-glow);
+  transition: transform var(--dur-fast) var(--ease);
+}
+.skip-link:focus {
+  transform: translate(-50%, 0);
 }
 
 /* ============ 布局工具 ============ */
@@ -246,6 +302,25 @@ img {
 .animate-in {
   animation: fade-up 700ms var(--ease) both;
 }
+
+/* 路由/布局转场（见 docs/16 §4.2） */
+.page-enter-active,
+.page-leave-active,
+.layout-enter-active,
+.layout-leave-active {
+  transition: opacity 320ms var(--ease), transform 320ms var(--ease);
+}
+.page-enter-from,
+.layout-enter-from {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.page-leave-to,
+.layout-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

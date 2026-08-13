@@ -22,16 +22,24 @@ const router = createRouter({
       // 不能再单独定义一条 { path: '/', redirect }，否则 vue-router 路由表冲突导致页面空白。
       path: '/',
       component: () => import('@/App.vue'),
-      redirect: '/news',
+      redirect: '/dashboard',
       children: [
-        { path: 'news', component: () => import('@/views/NewsManage.vue') },
-        { path: 'media', component: () => import('@/views/MediaLibrary.vue') },
+        { path: 'dashboard', component: () => import('@/views/Dashboard.vue'), meta: { title: '数据概览' } },
+        { path: 'news', component: () => import('@/views/NewsManage.vue'), meta: { title: '新闻管理' } },
+        { path: 'jobs', component: () => import('@/views/JobsManage.vue'), meta: { title: '招聘管理' } },
+        { path: 'media', component: () => import('@/views/MediaLibrary.vue'), meta: { title: '媒体库' } },
       ],
     },
     {
       // 登录页为独立顶级路由，避免被后台布局（侧边栏/顶栏）包裹
       path: '/login',
       component: () => import('@/views/Login.vue'),
+    },
+    {
+      // 404 兜底：置于路由表末尾，匹配所有未命中路径（见 docs/16 §4.4）
+      path: '/:pathMatch(.*)*',
+      component: () => import('@/views/NotFound.vue'),
+      meta: { title: '页面不存在' },
     },
   ],
 });

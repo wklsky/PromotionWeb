@@ -14,7 +14,9 @@ import com.taiji.common.Result;
 import com.taiji.entity.Media;
 import com.taiji.service.MediaService;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,5 +48,12 @@ public class MediaController {
             @RequestParam(defaultValue = "20") long size) {
         IPage<Media> data = mediaService.page(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size));
         return Result.success(PageResult.from(data));
+    }
+
+    // 删除媒体：DELETE /api/media/{id}，需认证（见 docs/11 §5、docs/14）
+    @DeleteMapping("/{id}")
+    public Result<Boolean> remove(@PathVariable Long id) {
+        // 逻辑删除（@TableLogic deleted 字段由 MyBatis-Plus 自动处理，见 docs/12）
+        return Result.success(mediaService.removeById(id));
     }
 }
