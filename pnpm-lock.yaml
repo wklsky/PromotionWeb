@@ -51,6 +51,9 @@ importers:
       typescript:
         specifier: ^5.4.0
         version: 5.4.2
+      unplugin-element-plus:
+        specifier: ^0.8.0
+        version: 0.8.0(rollup@4.62.4)
       vite:
         specifier: ^5.2.0
         version: 5.2.0(@types/node@20.19.43)(terser@5.49.2)
@@ -1607,8 +1610,8 @@ packages:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
     engines: {node: '>=8'}
 
-  ansi-regex@6.2.2:
-    resolution: {integrity: sha512-Bq3SmSpyFHaWjPk8If9yc6svM8c56dB5BAtW4Qbw5jHTwwXXcTLoRMkpDJp6VL0XzlWaCHTXrkFURMYmD0sLqg==}
+  ansi-regex@6.3.0:
+    resolution: {integrity: sha512-WpDfL7NO6j7tH88IDBNVdUJxDh9nmCteAVW9dsep846XdwF4naCBK+/tGLX3KJgcpgMRXCFlTM2hKGoK9FsdrQ==}
     engines: {node: '>=12'}
 
   ansi-styles@4.0.0:
@@ -2272,6 +2275,9 @@ packages:
   es-errors@1.3.0:
     resolution: {integrity: sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==}
     engines: {node: '>= 0.4'}
+
+  es-module-lexer@1.3.0:
+    resolution: {integrity: sha512-vZK7T0N2CBmBOixhmjdqx2gWVbFZ4DXZ/NyRMZVlJXPa7CyFS+/a4QQsDGDQy9ZfEzxFuNEsMLeQJnKP2p5/JA==}
 
   es-module-lexer@2.3.1:
     resolution: {integrity: sha512-shc1dbU90Yl/xq1QrC7QRtfcwURZuVRfPhZbDoldJ1cn1gzDvBaBWlv0eFolj5+0znnPJz5TXLxsN77X/12KTA==}
@@ -3133,6 +3139,10 @@ packages:
     resolution: {integrity: sha512-smsWv2LzFjP03xmvFoJ331ss6h+jixfA4UUV/Bsiyuu4YJPfN+FIQGOIiv4w9/+MoHkfkJ22UIaQWRVFRfH6Vw==}
     engines: {node: '>=20'}
 
+  open@11.0.1:
+    resolution: {integrity: sha512-NzwMUB6C1D0+Kd+9iMS/H4k+Ck3cTX6Ckyfr/gAGlmvSE1LUQZnEZvWBi4PYmMwH/S5SMeTXnE+9uAz8uF+pWw==}
+    engines: {node: '>=20'}
+
   open@7.4.2:
     resolution: {integrity: sha512-MVHddDVweXZF3awtlAS+6pgKLlm/JgxZ90+/NBurBoQctVOOB/zDdVjcyPzQ+0laDGbsWgrRkflI65sQeOgT9Q==}
     engines: {node: '>=8'}
@@ -3506,6 +3516,10 @@ packages:
 
   powershell-utils@0.1.0:
     resolution: {integrity: sha512-dM0jVuXJPsDN6DvRpea484tCUaMiXWjuCn++HGTqUWzGDjv5tZkEZldAJ/UMlqRYGFrD/etByo4/xOuC/snX2A==}
+    engines: {node: '>=20'}
+
+  powershell-utils@0.2.0:
+    resolution: {integrity: sha512-ZlsFlG7MtSFCoc5xreOvBAozCJ6Pf06opgJjh9ONEv418xpZSAzNjstD36C6+JwOnfSqOW/9uDkqKjezTdxZhw==}
     engines: {node: '>=20'}
 
   prettier-plugin-java@2.10.3:
@@ -4085,6 +4099,10 @@ packages:
     resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
     engines: {node: '>= 10.0.0'}
 
+  unplugin-element-plus@0.8.0:
+    resolution: {integrity: sha512-jByUGY3FG2B8RJKFryqxx4eNtSTj+Hjlo8edcOdJymewndDQjThZ1pRUQHRjQsbKhTV2jEctJV7t7RJ405UL4g==}
+    engines: {node: '>=14.19.0'}
+
   unplugin-utils@0.3.2:
     resolution: {integrity: sha512-xVToRh2CTmLk2HnEG7ac4rl1MJTT3RFkpS8B++/SnB0kXvuaavD+n3m/vrzyWQOdJNSZQACnbz01pnppbwV5BA==}
     engines: {node: '>=20.19.0'}
@@ -4098,6 +4116,9 @@ packages:
     peerDependenciesMeta:
       vue-router:
         optional: true
+
+  unplugin@1.3.2:
+    resolution: {integrity: sha512-Lh7/2SryjXe/IyWqx9K7IKwuKhuOFZEhotiBquOODsv2IVyDkI9lv/XhgfjdXf/xdbv32txmnBNnC/JVTDJlsA==}
 
   unplugin@2.3.11:
     resolution: {integrity: sha512-5uKD0nqiYVzlmCRs01Fhs2BdkEgBS3SAVP6ndrBsuK42iC2+JHyxM05Rm9G8+5mkmRtzMZGY8Ct5+mliZxU/Ww==}
@@ -4451,6 +4472,13 @@ packages:
     resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
     engines: {node: '>=12'}
 
+  webpack-sources@3.5.1:
+    resolution: {integrity: sha512-jyuiGJdtvY434z5bUZrjz67v76/ePNvFZTp9Mdz29IlH4+GPsgyGjiv0fKI+M7BdkU6ADjulUcKAd3tUK3WlEw==}
+    engines: {node: '>=10.13.0'}
+
+  webpack-virtual-modules@0.5.0:
+    resolution: {integrity: sha512-kyDivFZ7ZM0BVOUteVbDFhlRt7Ah/CSPwJdi8hBpkK7QLumUqdLtVfm/PX/hkcnrvr0i77fO5+TjZ94Pe+C9iw==}
+
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
@@ -4521,6 +4549,10 @@ packages:
 
   wsl-utils@0.3.1:
     resolution: {integrity: sha512-g/eziiSUNBSsdDJtCLB8bdYEUMj4jR7AGeUo96p/3dTafgjHhpF4RiCFPiRILwjQoDXx5MqkBr4fwWtR3Ky4Wg==}
+    engines: {node: '>=20'}
+
+  wsl-utils@1.0.0:
+    resolution: {integrity: sha512-Hl0ZOAs672vg+06kfujwRhoS6/jehvULrlFkuF2dRu6pHgA8U06h3xqNIqNNU1LTXPcedxByAR4GS6pwQK0mgA==}
     engines: {node: '>=20'}
 
   xml-name-validator@5.0.0:
@@ -6144,7 +6176,7 @@ snapshots:
 
   ansi-regex@5.0.1: {}
 
-  ansi-regex@6.2.2: {}
+  ansi-regex@6.3.0: {}
 
   ansi-styles@4.0.0:
     dependencies:
@@ -6759,6 +6791,8 @@ snapshots:
   es-define-property@1.0.1: {}
 
   es-errors@1.3.0: {}
+
+  es-module-lexer@1.3.0: {}
 
   es-module-lexer@2.3.1: {}
 
@@ -7901,6 +7935,15 @@ snapshots:
       powershell-utils: 0.1.0
       wsl-utils: 0.3.1
 
+  open@11.0.1:
+    dependencies:
+      default-browser: 5.5.0
+      define-lazy-prop: 3.0.0
+      is-in-ssh: 1.0.0
+      is-inside-container: 1.0.0
+      powershell-utils: 0.2.0
+      wsl-utils: 1.0.0
+
   open@7.4.2:
     dependencies:
       is-docker: 2.2.1
@@ -8281,6 +8324,8 @@ snapshots:
 
   powershell-utils@0.1.0: {}
 
+  powershell-utils@0.2.0: {}
+
   prettier-plugin-java@2.10.3(prettier@3.9.6):
     dependencies:
       prettier: 3.9.6
@@ -8401,7 +8446,7 @@ snapshots:
 
   rollup-plugin-visualizer@7.0.1(rollup@4.62.4):
     dependencies:
-      open: 11.0.0
+      open: 11.0.1
       picomatch: 4.0.5
       source-map: 0.7.4
       yargs: 18.1.0
@@ -8628,7 +8673,7 @@ snapshots:
 
   strip-ansi@7.2.0:
     dependencies:
-      ansi-regex: 6.2.2
+      ansi-regex: 6.3.0
 
   strip-final-newline@3.0.0: {}
 
@@ -8901,6 +8946,15 @@ snapshots:
 
   universalify@2.0.1: {}
 
+  unplugin-element-plus@0.8.0(rollup@4.62.4):
+    dependencies:
+      '@rollup/pluginutils': 5.4.0(rollup@4.62.4)
+      es-module-lexer: 1.3.0
+      magic-string: 0.30.21
+      unplugin: 1.3.2
+    transitivePeerDependencies:
+      - rollup
+
   unplugin-utils@0.3.2:
     dependencies:
       pathe: 2.0.3
@@ -8930,6 +8984,13 @@ snapshots:
       vue-router: 4.6.4(vue@3.5.41(typescript@5.4.2))
     transitivePeerDependencies:
       - vue
+
+  unplugin@1.3.2:
+    dependencies:
+      acorn: 8.18.0
+      chokidar: 3.6.0
+      webpack-sources: 3.5.1
+      webpack-virtual-modules: 0.5.0
 
   unplugin@2.3.11:
     dependencies:
@@ -9196,6 +9257,10 @@ snapshots:
 
   webidl-conversions@7.0.0: {}
 
+  webpack-sources@3.5.1: {}
+
+  webpack-virtual-modules@0.5.0: {}
+
   webpack-virtual-modules@0.6.2: {}
 
   whatwg-encoding@3.1.1:
@@ -9258,6 +9323,11 @@ snapshots:
   ws@8.21.3: {}
 
   wsl-utils@0.3.1:
+    dependencies:
+      is-wsl: 3.1.1
+      powershell-utils: 0.1.0
+
+  wsl-utils@1.0.0:
     dependencies:
       is-wsl: 3.1.1
       powershell-utils: 0.1.0

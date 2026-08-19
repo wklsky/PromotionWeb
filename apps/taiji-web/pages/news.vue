@@ -21,33 +21,30 @@ useSeoMeta({
   description: '太极馆企业动态、行业资讯与技术文章。',
 });
 
-// SSR 首屏直出：useAsyncData 服务端即发起请求（见 docs/07 §2 SEO 诉求）。
-const { data, pending, error } = await useAsyncData('news-all', async () => {
-  const res = await fetchNews({ page: 1, size: 100 });
-  if (res.code === 0 && res.data) return res.data.list as NewsListVO[];
-  throw new Error(res.message || '加载新闻失败');
-});
-
-const all = ref<NewsListVO[]>(data.value ?? []);
-watch(data, (v) => (all.value = v ?? []));
-
-// 分类筛选（接 NEWS_CATEGORIES，见 docs/13 §9）
-const activeCat = ref<string>('全部');
-const cats = ['全部', ...NEWS_CATEGORIES];
-const filtered = computed(() =>
-  activeCat.value === '全部'
-    ? all.value
-    : all.value.filter((n) => n.category === activeCat.value),
-);
-
-// 客户端分页（后端列表为已发布内容，前端分页保证体验完整，见 docs/16 §4.3）
+// SSR 首屏直出：服务端分页 + 分类过滤均由后端完成，避免一次性拉取全部数据（见 docs/07 §2、docs/13 §2.2）。
+// page 与 activeCat 变化触发 watch 重新取数，key 随筛选项变化保证 SSR 缓存键隔离。
 const pageSize = 9;
 const page = ref(1);
-const totalPages = computed(() => Math.max(1, Math.ceil(filtered.value.length / pageSize)));
-const paged = computed(() => filtered.value.slice((page.value - 1) * pageSize, page.value * pageSize));
-watch(filtered, () => (page.value = 1));
+const activeCat = ref<string>('全部');
+const cats = ['全部', ...NEWS_CATEGORIES];
 
-// JSON-LD：Article 列表结构化数据（SEO，见 docs/07 §3）
+const { data, pending, error } = await useAsyncData(
+  () => `news-${activeCat.value}-${page.value}`,
+  async () => {
+    const res = await fetchNews({ page: page.value, size: pageSize, category: activeCat.value });
+    if (res.code === 0 && res.data) return res.data;
+    throw new Error(res.message || '加载新闻失败');
+  },
+);
+
+const list = computed<NewsListVO[]>(() => data.value?.list ?? []);
+const totalPages = computed(() => Math.max(1, data.value?.pages ?? 1));
+
+// 切换分类/分页回到首屏，避免残留旧数据造成布局抖动
+watch(activeCat, () => (page.value = 1));
+watch([page, activeCat], () => refreshNuxtData());
+
+// JSON-LD：Article 列表结构化数据（SEO，见 docs/07 §3）；仅取当前页前 10 条，避免随分类变化失真
 useHead({
   script: [
     {
@@ -55,7 +52,7 @@ useHead({
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'ItemList',
-        itemListElement: all.value.slice(0, 10).map((n, i) => ({
+        itemListElement: list.value.slice(0, 10).map((n, i) => ({
           '@type': 'ListItem',
           position: i + 1,
           name: n.title,
@@ -100,7 +97,7 @@ useHead({
 
       <EmptyState v-else-if="error" type="error" :title="error.message" :desc="'请稍后重试'" />
       <EmptyState
-        v-else-if="!paged.length"
+        v-else-if="!list.length"
         type="empty"
         title="暂无新闻"
         :desc="activeCat === '全部' ? '敬请期待更多动态' : `${activeCat} 分类下暂无内容`"
@@ -108,7 +105,7 @@ useHead({
 
       <template v-else>
         <div class="masonry masonry--responsive">
-          <NewsCard v-for="item in paged" :key="item.id" :item="item" />
+          <NewsCard v-for="item in list" :key="item.id" :item="item" />
         </div>
 
         <!-- 分页 -->

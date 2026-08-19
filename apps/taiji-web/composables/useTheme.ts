@@ -39,8 +39,15 @@ export function useTheme(): void {
     }
   };
 
+  // 业务规则：ROUTE_THEME_MAP 含 '/' 前缀会匹配所有路径，若按插入顺序 find 则 '/'
+  // 永远先命中，导致 /dragon、/panda、/kunpeng 三馆主题被错误降级为 default。
+  // 因此按 key 长度降序匹配，优先命中更具体的路由前缀，最后才回退到 '/'。
+  const sortedEntries = Object.entries(ROUTE_THEME_MAP).sort(
+    (a, b) => b[0].length - a[0].length,
+  );
+
   const apply = (path: string): void => {
-    const theme = (Object.entries(ROUTE_THEME_MAP).find(([prefix]) =>
+    const theme = (sortedEntries.find(([prefix]) =>
       path.startsWith(prefix),
     )?.[1] ?? 'dragon') as ThemeKey;
     document.body.dataset.theme = theme;

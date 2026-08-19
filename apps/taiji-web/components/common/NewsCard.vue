@@ -31,7 +31,10 @@ const emit = defineEmits<{
         v-if="item.cover"
         :src="item.cover"
         :alt="item.title"
+        width="320"
+        height="200"
         loading="lazy"
+        decoding="async"
         class="news-card__img"
       />
       <div v-else class="news-card__placeholder">{{ item.title.slice(0, 1) }}</div>

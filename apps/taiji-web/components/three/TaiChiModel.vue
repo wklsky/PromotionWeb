@@ -10,19 +10,21 @@
  -->
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue';
-import * as THREE from 'three';
+import type * as THREE_NS from 'three';
 import { useParallax } from '~/composables/useParallax';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const { x: px, y: py } = useParallax();
 
-let renderer: THREE.WebGLRenderer | null = null;
+// 仅用 type-only 导入做类型标注；运行时 THREE 在 onMounted 内动态 import('three')，
+// 避免顶层静态引入导致 SSR 构建把整包 three 打进服务端/首屏产物（见 docs/09 §5 性能约束）。
+let renderer: THREE_NS.WebGLRenderer | null = null;
 let frame = 0;
 let ro: ResizeObserver | null = null;
 // 资源引用提升到外层，便于卸载时精确释放（避免 GPU 资源泄漏，见下 onBeforeUnmount）
-let sphere: THREE.Mesh | null = null;
-let wire: THREE.Mesh | null = null;
-let tex: THREE.CanvasTexture | null = null;
+let sphere: THREE_NS.Mesh | null = null;
+let wire: THREE_NS.Mesh | null = null;
+let tex: THREE_NS.CanvasTexture | null = null;
 
 /** 读取当前主题主色（运行时由 useTheme 写入 :root） */
 function themePrimary(): string {
@@ -31,79 +33,15 @@ function themePrimary(): string {
   return v || '#d4af37';
 }
 
-/** 绘制阴阳太极贴图（白=阳，黑=阴），外环描主题色，保持太极可辨识 */
-function makeTaiChiTexture(accent: string): THREE.CanvasTexture {
-  const size = 512;
-  const cv = document.createElement('canvas');
-  cv.width = cv.height = size;
-  const ctx = cv.getContext('2d')!;
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = size * 0.44;
-  const light = '#f4f4f4';
-  const dark = '#101012';
-
-  // 底色
-  ctx.fillStyle = dark;
-  ctx.fillRect(0, 0, size, size);
-  // 整圆白底
-  ctx.fillStyle = light;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fill();
-  // 左半黑
-  ctx.fillStyle = dark;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, Math.PI / 2, Math.PI * 1.5);
-  ctx.closePath();
-  ctx.fill();
-  // 下方白色凸（进入黑半）
-  ctx.fillStyle = light;
-  ctx.beginPath();
-  ctx.arc(cx, cy + r / 2, r / 2, 0, Math.PI * 2);
-  ctx.fill();
-  // 上方黑色凸（进入白半）
-  ctx.fillStyle = dark;
-  ctx.beginPath();
-  ctx.arc(cx, cy - r / 2, r / 2, 0, Math.PI * 2);
-  ctx.fill();
-  // 阴中阳点（白凸内黑点）
-  ctx.fillStyle = dark;
-  ctx.beginPath();
-  ctx.arc(cx, cy + r / 2, r / 8, 0, Math.PI * 2);
-  ctx.fill();
-  // 阳中阴点（黑凸内白点）
-  ctx.fillStyle = light;
-  ctx.beginPath();
-  ctx.arc(cx, cy - r / 2, r / 8, 0, Math.PI * 2);
-  ctx.fill();
-  // 外环主题色描边
-  ctx.strokeStyle = accent;
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
-  ctx.stroke();
-  // 顶/底小点主题色描边高亮
-  ctx.fillStyle = accent;
-  ctx.beginPath();
-  ctx.arc(cx, cy + r / 2, r / 16, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(cx, cy - r / 2, r / 16, 0, Math.PI * 2);
-  ctx.fill();
-
-  const tex = new THREE.CanvasTexture(cv);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
-}
-
-onMounted(() => {
+onMounted(async () => {
   const canvas = canvasRef.value;
   if (!canvas) return;
   const canRender =
     window.innerWidth >= 1024 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!canRender) return; // 降级：SiteHero 回退 CSS 环
+
+  // 动态导入 three：仅在浏览器端、确认需要渲染时才加载整包，避免拖累 SSR/首屏 JS 体积
+  const THREE = await import('three');
 
   const accent = themePrimary();
   const parent = canvas.parentElement!;
@@ -120,6 +58,64 @@ onMounted(() => {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
   camera.position.z = 4.2;
+
+  // 绘制阴阳太极贴图（白=阳，黑=阴），外环描主题色，保持太极可辨识
+  const makeTaiChiTexture = (a: string): THREE.CanvasTexture => {
+    const size = 512;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = size;
+    const ctx = cv.getContext('2d')!;
+    const cx = size / 2;
+    const cy = size / 2;
+    const r = size * 0.44;
+    const light = '#f4f4f4';
+    const dark = '#101012';
+
+    ctx.fillStyle = dark;
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = light;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = dark;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, Math.PI / 2, Math.PI * 1.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = light;
+    ctx.beginPath();
+    ctx.arc(cx, cy + r / 2, r / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = dark;
+    ctx.beginPath();
+    ctx.arc(cx, cy - r / 2, r / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = dark;
+    ctx.beginPath();
+    ctx.arc(cx, cy + r / 2, r / 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = light;
+    ctx.beginPath();
+    ctx.arc(cx, cy - r / 2, r / 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = a;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = a;
+    ctx.beginPath();
+    ctx.arc(cx, cy + r / 2, r / 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, cy - r / 2, r / 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    const texture = new THREE.CanvasTexture(cv);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 4;
+    return texture;
+  };
 
   // 太极球
   tex = makeTaiChiTexture(accent);
@@ -152,10 +148,10 @@ onMounted(() => {
   const clock = new THREE.Clock();
   const tick = (): void => {
     const t = clock.getElapsedTime();
-    sphere.rotation.y = t * 0.35;
-    sphere.rotation.x = Math.sin(t * 0.3) * 0.12;
-    wire.rotation.y = -t * 0.12;
-    wire.rotation.z = t * 0.05;
+    sphere!.rotation.y = t * 0.35;
+    sphere!.rotation.x = Math.sin(t * 0.3) * 0.12;
+    wire!.rotation.y = -t * 0.12;
+    wire!.rotation.z = t * 0.05;
     // 鼠标视差（useParallax 归一化 -0.5~0.5）
     camera.position.x += (px.value * 0.6 - camera.position.x) * 0.05;
     camera.position.y += (-py.value * 0.6 - camera.position.y) * 0.05;
@@ -182,7 +178,7 @@ onBeforeUnmount(() => {
   ro?.disconnect();
   ro = null;
   // 释放几何体 / 材质 / 贴图，避免离开首页时 GPU 资源泄漏
-  const disposeMaterial = (m: THREE.Material | THREE.Material[] | undefined): void => {
+  const disposeMaterial = (m: THREE_NS.Material | THREE_NS.Material[] | undefined): void => {
     if (!m) return;
     if (Array.isArray(m)) m.forEach((x) => x.dispose());
     else m.dispose();

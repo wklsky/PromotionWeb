@@ -15,13 +15,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -50,9 +53,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             boolean blacklisted = redisTemplate != null
                     && Boolean.TRUE.equals(redisTemplate.hasKey("jwt:blacklist:" + token));
             if (!blacklisted && !jwtUtil.isExpired(token)) {
-                String username = jwtUtil.parseUsername(token);
+                // 登录时 subject 约定为 "username|role"（见 AuthServiceImpl.login / JwtUtil.parsePrincipal）。
+                // 仅取 [0] username 注入主体，角色数组 [1] 用于 RBAC 权威映射。
+                String[] principal = jwtUtil.parsePrincipal(token);
+                // 防御：主体结构异常（缺少角色段）时拒绝放行，避免越权解析到空权威。
+                if (principal.length < 2) {
+                    throw new AuthenticationException("非法的令牌主体结构") {};
+                }
+                String username = principal[0];
+                String role = principal[1];
+                // 将角色映射为 Spring Security 的 ROLE_<role> 权威，供 @PreAuthorize("hasRole('admin')") 识别。
+                // 业务规则：admin 拥有全部权限，editor 负责内容维护（见 docs/13 §9）。
+                List<SimpleGrantedAuthority> authorities =
+                        List.of(new SimpleGrantedAuthority("ROLE_" + role));
                 UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(username, null, null);
+                        new UsernamePasswordAuthenticationToken(username, null, authorities);
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }

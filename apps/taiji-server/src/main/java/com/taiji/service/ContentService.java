@@ -18,4 +18,10 @@ public interface ContentService extends IService<CompanyInfo> {
      * 按区块(section)查询已启用内容，官网各页面对应 section 常量。
      */
     List<CompanyInfo> listBySection(String section);
+
+    /**
+     * 更新企业内容（CMS 内容维护写操作，需 admin/editor 角色）。
+     */
+    boolean updateContent(Long id, String section, String title, String content,
+                          String cover, Integer sort, Integer status);
 }

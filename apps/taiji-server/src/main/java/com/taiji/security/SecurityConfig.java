@@ -41,8 +41,13 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/content/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/jobs").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/media/**").permitAll()
-                // 其余（写操作 / CMS 后台）需认证（RBAC 简版 admin/editor，见 docs/13 §9）
-                .anyRequest().authenticated()
+                // RBAC 落地：内容写操作需认证且具备 admin/editor 角色（editor 负责内容维护，见 docs/13 §9）。
+                // hasAnyRole 会自动拼接 ROLE_ 前缀，与 JwtAuthenticationFilter 注入的权威一致。
+                .requestMatchers(HttpMethod.POST, "/api/news", "/api/jobs", "/api/content", "/api/media").hasAnyRole("admin", "editor")
+                .requestMatchers(HttpMethod.PUT, "/api/news/**", "/api/jobs/**", "/api/content/**", "/api/media/**").hasAnyRole("admin", "editor")
+                .requestMatchers(HttpMethod.DELETE, "/api/news/**", "/api/jobs/**", "/api/content/**", "/api/media/**").hasAnyRole("admin", "editor")
+                // 其余（写操作 / CMS 后台 / 未知端点）需认证（RBAC 简版 admin/editor，见 docs/13 §9）
+                .anyRequest().hasAnyRole("admin", "editor")
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

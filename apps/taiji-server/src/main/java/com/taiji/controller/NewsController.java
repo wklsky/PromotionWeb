@@ -11,8 +11,12 @@ package com.taiji.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.taiji.common.PageResult;
 import com.taiji.common.Result;
+import com.taiji.dto.NewsDTO;
 import com.taiji.entity.News;
 import com.taiji.service.NewsService;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,18 +31,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/news")
 public class NewsController {
 
+    private static final Logger log = LoggerFactory.getLogger(NewsController.class);
+
     private final NewsService newsService;
 
     public NewsController(NewsService newsService) {
         this.newsService = newsService;
     }
 
-    // 官网公开读取已发布新闻，无需认证（见 SecurityConfig 放行规则）
+    // 官网公开读取已发布新闻，无需认证（见 SecurityConfig 放行规则）；category 可选按分类过滤
     @GetMapping
     public Result<PageResult<News>> list(
             @RequestParam(defaultValue = "1") long page,
-            @RequestParam(defaultValue = "10") long size) {
-        IPage<News> data = newsService.pagePublished(page, size);
+            @RequestParam(defaultValue = "10") long size,
+            @RequestParam(required = false) String category) {
+        IPage<News> data = newsService.pagePublished(page, size, category);
         return Result.success(PageResult.from(data));
     }
 
@@ -48,22 +55,22 @@ public class NewsController {
         return Result.success(newsService.getById(id));
     }
 
-    // CMS 写操作：需带 JWT（SecurityConfig 已 authenticated），由前端 admin 调用（见 docs/13 §2.3）
+    // CMS 写操作：需带 JWT（SecurityConfig 角色校验），入参经 @Valid 校验（见 docs/13 §2.3）
     @PostMapping
-    public Result<Long> save(@RequestBody News news) {
-        newsService.save(news);
-        return Result.success(news.getId());
+    public Result<Long> create(@Valid @RequestBody NewsDTO dto) {
+        return Result.success(newsService.create(dto));
     }
 
     @PutMapping("/{id}")
-    public Result<Boolean> update(@PathVariable Long id, @RequestBody News news) {
-        news.setId(id);
-        return Result.success(newsService.updateById(news));
+    public Result<Boolean> update(@PathVariable Long id, @Valid @RequestBody NewsDTO dto) {
+        return Result.success(newsService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public Result<Boolean> remove(@PathVariable Long id) {
         // 逻辑删除（@TableLogic deleted 字段由 MyBatis-Plus 自动处理，见 docs/12）
-        return Result.success(newsService.removeById(id));
+        boolean removed = newsService.removeById(id);
+        log.info("[audit] 删除新闻 newsId={} result={}", id, removed);
+        return Result.success(removed);
     }
 }

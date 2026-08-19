@@ -15,6 +15,8 @@ import com.taiji.mapper.AdminRoleMapper;
 import com.taiji.mapper.AdminUserMapper;
 import com.taiji.security.JwtUtil;
 import com.taiji.service.AuthService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -25,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     private final AdminUserMapper userMapper;
     private final AdminRoleMapper roleMapper;
@@ -50,11 +54,15 @@ public class AuthServiceImpl implements AuthService {
         AdminUser user = userMapper.selectOne(
                 new LambdaQueryWrapper<AdminUser>().eq(AdminUser::getUsername, username));
         if (user == null || user.getStatus() == 0 || !encoder.matches(password, user.getPassword())) {
+            // 审计：登录失败不记录具体原因，避免泄露账号是否存在（防用户枚举）
+            log.warn("[audit] 登录失败 username={}", username);
             throw new com.taiji.common.BusinessException("用户名或密码错误");
         }
         AdminRole role = roleMapper.selectById(user.getRoleId());
+        String roleName = role != null ? role.getName() : "editor";
         // 签发 JWT，并将角色写入声明（RBAC 简版 admin/editor，见 docs/13 §9）
-        return jwtUtil.generate(username + "|" + (role != null ? role.getName() : "editor"));
+        log.info("[audit] 登录成功 username={} role={}", username, roleName);
+        return jwtUtil.generate(username + "|" + roleName);
     }
 
     @Override

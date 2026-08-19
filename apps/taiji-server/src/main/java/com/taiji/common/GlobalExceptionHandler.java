@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -28,6 +30,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBiz(BusinessException e) {
         return Result.fail(400, e.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Result<Void> handleValidation(MethodArgumentNotValidException e) {
+        // 参数校验失败属于客户端输入错误，统一返回 400 + 首个字段错误文案，避免落到 500 通用异常。
+        // 安全约束：仅返回字段级 message，不暴露整体校验结构，避免泄露字段命名约定。
+        FieldError firstError = e.getBindingResult().getFieldErrors().get(0);
+        String message = firstError != null ? firstError.getDefaultMessage() : "参数校验失败";
+        return Result.fail(400, message);
     }
 
     @ExceptionHandler(AuthenticationException.class)

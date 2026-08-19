@@ -9,7 +9,19 @@
 package com.taiji.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.taiji.dto.JobDTO;
 import com.taiji.entity.Job;
 
 public interface JobService extends IService<Job> {
+    /**
+     * 新增招聘：入参为写操作 DTO（字段经 @Valid 校验，禁止越权注入 id/deleted）。
+     * @return 新记录主键
+     */
+    Long create(JobDTO dto);
+
+    /**
+     * 更新招聘：按 id 覆盖业务字段，忽略 DTO 中不存在的内部字段。
+     * @return 是否更新成功
+     */
+    boolean update(Long id, JobDTO dto);
 }

@@ -12,6 +12,7 @@ import com.taiji.common.Result;
 import com.taiji.entity.ContactLead;
 import com.taiji.service.ContactService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,7 +29,7 @@ public class ContactController {
     }
 
     @PostMapping("/submit")
-    public Result<Void> submit(@RequestBody ContactLead lead, HttpServletRequest request) {
+    public Result<Void> submit(@Valid @RequestBody ContactLead lead, HttpServletRequest request) {
         // TODO: 接入风控/限频(60s/次，见 docs/13)；当前直接落库
         contactService.save(lead);
         return Result.success(null);
